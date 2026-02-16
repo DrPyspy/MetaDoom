@@ -614,6 +614,15 @@ class MetaDoomPlayer : PlayerPawn
 			fsteps.Init(self);
 		}
 	}
+	
+	override void CheckJump()
+	{
+		let player = self.player;
+		if ( player.cmd.buttons & BT_JUMP && !FindInventory("MetaChaingun_AltSlow") )
+		{
+			super.CheckJump();
+		}
+	}
 }
 
 // The player's severed skull gib. Used when the player is gibbed, and possibly
