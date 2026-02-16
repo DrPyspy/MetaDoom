@@ -309,16 +309,25 @@ class MetaSuperShotgun : MetaDoomWeapon
 		loop;
 		
 	Overlay.FiringRecoil:
-		TNT1 B 1;
-		TNT1 B 1 bright { A_WeaponOffset(0,45, WOF_INTERPOLATE); A_SetPitch(pitch-4, SPF_INTERPOLATE); }
-		TNT1 B 1 bright { A_WeaponOffset(0,58, WOF_INTERPOLATE); A_SetPitch(pitch-4, SPF_INTERPOLATE); A_ZoomFactor(0.95,ZOOM_NOSCALETURNING); }
+		TNT1 B 1
+		{
+			let recoil = new("Meta_RecoilInfo");
+			recoil.tics_in = 3;
+			recoil.tics_out = 14;
+			recoil.pitch = 8;
+			recoil.roll_shake = 0.75;
+			recoil.roll_speed = 25;
+			A_MetaRecoil(recoil);
+		}
+		TNT1 B 1 bright { A_WeaponOffset(0,45, WOF_INTERPOLATE); }
+		TNT1 B 1 bright { A_WeaponOffset(0,58, WOF_INTERPOLATE); A_ZoomFactor(0.95,ZOOM_NOSCALETURNING); }
 		TNT1 C 1 bright { A_WeaponOffset(0,54, WOF_INTERPOLATE); A_ZoomFactor(1.0,ZOOM_NOSCALETURNING); }
-		TNT1 C 1 bright { A_WeaponOffset(0,48, WOF_INTERPOLATE); A_SetPitch(pitch+1, SPF_INTERPOLATE); }
-		TNT1 C 1 bright { A_WeaponOffset(0,45, WOF_INTERPOLATE); A_SetPitch(pitch+1, SPF_INTERPOLATE); }
-		TNT1 D 1 { A_WeaponOffset(0,42, WOF_INTERPOLATE); A_SetPitch(pitch+1, SPF_INTERPOLATE); }
-		TNT1 D 1 { A_WeaponOffset(0,38, WOF_INTERPOLATE); A_SetPitch(pitch+1, SPF_INTERPOLATE); }
-		TNT1 D 1 { A_WeaponOffset(0,36, WOF_INTERPOLATE); A_SetPitch(pitch+2, SPF_INTERPOLATE); }
-		TNT1 E 1 { A_WeaponOffset(0,34, WOF_INTERPOLATE); A_SetPitch(pitch+2, SPF_INTERPOLATE); }
+		TNT1 C 1 bright { A_WeaponOffset(0,48, WOF_INTERPOLATE); }
+		TNT1 C 1 bright { A_WeaponOffset(0,45, WOF_INTERPOLATE); }
+		TNT1 D 1 { A_WeaponOffset(0,42, WOF_INTERPOLATE); }
+		TNT1 D 1 { A_WeaponOffset(0,38, WOF_INTERPOLATE); }
+		TNT1 D 1 { A_WeaponOffset(0,36, WOF_INTERPOLATE); }
+		TNT1 E 1 { A_WeaponOffset(0,34, WOF_INTERPOLATE); }
 		TNT1 E 1 A_WeaponOffset(0,33, WOF_INTERPOLATE);
 		TNT1 E 1 A_WeaponOffset(0,32, WOF_INTERPOLATE);
 		TNT1 A -1;

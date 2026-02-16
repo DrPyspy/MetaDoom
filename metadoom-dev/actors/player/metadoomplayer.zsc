@@ -72,6 +72,10 @@ class MetaDoomPlayer : PlayerPawn
 	// player in deathmatch.
 	float oldangle;
 	
+	// [Py] recoil stuff
+	Meta_RecoilInfo recoil_info;
+	int recoil_tics;
+	
 	States
 	{
 	Spawn:
@@ -397,6 +401,39 @@ class MetaDoomPlayer : PlayerPawn
 			A_SpawnItemEx("MetaFireExtinguisherSelfSprayFX",random(-16,16),random(-16,16),0,0,0,4);
 		}
 		
+		// [Py] fancy recoil shite
+		if ( recoil_info )
+		{
+			if ( recoil_tics >= recoil_info.tics_in + recoil_info.tics_out )
+			{
+				A_SetViewPitch(0, SPF_INTERPOLATE);
+				A_SetViewRoll(0, SPF_INTERPOLATE);
+				recoil_info.Destroy();
+				recoil_tics = 0;
+			}
+			else
+			{
+				double amt;
+				if ( recoil_tics < recoil_info.tics_in )
+				{
+					amt = recoil_tics / double(recoil_info.tics_in);
+				}
+				else
+				{
+					amt = 1.0 - (recoil_tics-recoil_info.tics_in) / double((recoil_info.tics_out-recoil_info.tics_in)+1);
+				}
+				A_SetViewPitch(-recoil_info.pitch * EaseInOutSine(amt), SPF_INTERPOLATE);
+				A_SetViewRoll((sin(level.maptime*recoil_info.roll_speed)*recoil_info.roll_shake) * EaseInOutSine(amt), SPF_INTERPOLATE);
+				recoil_tics++;
+			}
+		}
+		else
+		{
+			A_SetViewPitch(0, SPF_INTERPOLATE);
+			A_SetViewRoll(0, SPF_INTERPOLATE);
+			recoil_tics = 0;
+		}
+		
 		Super.Tick();
 	}
 	
@@ -534,6 +571,18 @@ class MetaDoomPlayer : PlayerPawn
 
 	// Footsteps Code
 	Footsteps fsteps;
+	
+	// [Py] Also recoil shite
+	double EaseInOutSine (double input)
+	{
+		return -(cos(180 * input) - 1) / 2;
+	}
+	
+	void DoViewRecoil(Meta_RecoilInfo recoilData)
+	{
+		recoil_info = recoilData;
+		recoil_tics = 0;
+	}
 
 	// Stuff that happens the moment the player is spawned.
 	override void PostBeginPlay()

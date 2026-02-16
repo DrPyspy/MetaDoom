@@ -89,6 +89,12 @@ class MetaMachineGun : MetaDoomWeapon
 			A_FireBullets(5.6, 0, 1, 5, "MetaBulletPuff");
 			A_AlertMonsters();
 			A_Overlay(14, "Overlay.Recoil");
+			
+			let recoil = new("Meta_RecoilInfo");
+			recoil.tics_in = 1;
+			recoil.tics_out = 6;
+			recoil.pitch = 0.15+frandom(0.025,0.025);
+			A_MetaRecoil(recoil);
 		}
 		MACG C 2 bright
 		{
@@ -122,6 +128,14 @@ class MetaMachineGun : MetaDoomWeapon
 				A_FireProjectile("MicroRocket");
 			}
 			A_TakeInventory("Clip", 5);
+			
+			let recoil = new("Meta_RecoilInfo");
+			recoil.tics_in = 1;
+			recoil.tics_out = 8;
+			recoil.pitch = 0.25;
+			recoil.roll_shake = 0.25;
+			recoil.roll_speed = 32+random(-2,2);
+			A_MetaRecoil(recoil);
 		}
 		MACG LM 2;
 		MACG J 0 A_ReFire;

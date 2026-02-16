@@ -9,6 +9,21 @@ All weapons inherit from MetaDoomWeapon, and hand off to its states
 when the player expires. This is used for the first-person death sequences.
 */
 
+Class Meta_RecoilInfo
+{
+	int tics_in;
+	int tics_out;
+	double pitch;
+	double roll;
+	double yaw;
+	double pitch_shake;
+	double roll_shake;
+	double yaw_shake;
+	double pitch_speed;
+	double roll_speed;
+	double yaw_speed;
+}
+
 Class MetaDoomWeapon : Weapon
 {
 	Default
@@ -228,6 +243,15 @@ Class MetaDoomWeapon : Weapon
 		
 		player.SetPsprite(PSP_FLASH, null);
 		player.mo.BringUpWeapon();
+	}
+	
+	action void A_MetaRecoil(Meta_RecoilInfo recoilData)
+	{
+		let plr = MetaDoomPlayer(invoker.owner);
+		if ( plr )
+		{
+			plr.DoViewRecoil(recoilData);
+		}
 	}
 }
 
