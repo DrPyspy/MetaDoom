@@ -316,7 +316,7 @@ class MetaBulletPuff : Actor
 		{
 			if ( !DamageSource ) return;
 			Vector3 defVel = Vec3To(DamageSource).Unit() * frandom(4,6);
-			for ( int i = 0; i < 4; i++ )
+			for ( int i = 0; i < random(3,4); i++ )
 			{
 				let p = Level.SpawnVisualThinker("Meta_VisSpark");
 				p.Texture = TexMan.CheckForTexture("PUFFA0");
