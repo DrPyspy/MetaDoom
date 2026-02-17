@@ -63,10 +63,11 @@ class MetaChaingun : MetaDoomWeapon
 		recoil.tics_out = 9;
 		recoil.pitch = 0.05+frandom(-0.025,0.025);
 		recoil.roll_speed = random(30,35);
-		recoil.roll_shake = 0.05;
+		recoil.roll_shake = 0.15;
 		recoil.pitch_speed = random(30,35);
-		recoil.pitch_shake = 0.15;
+		recoil.pitch_shake = 0.05;
 		A_MetaRecoil(recoil);
+		A_Quake(1,2,0,750,0);
 	}
 	
 	action void A_MetaChaingunRecoil2()
