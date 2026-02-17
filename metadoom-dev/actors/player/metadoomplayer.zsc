@@ -422,7 +422,9 @@ class MetaDoomPlayer : PlayerPawn
 				{
 					amt = 1.0 - (recoil_tics-recoil_info.tics_in) / double((recoil_info.tics_out-recoil_info.tics_in)+1);
 				}
-				A_SetViewPitch(-recoil_info.pitch * EaseInOutSine(amt), SPF_INTERPOLATE);
+				double newPitch = -recoil_info.pitch;
+				newPitch += sin(level.maptime * recoil_info.pitch_speed) * recoil_info.pitch_shake;
+				A_SetViewPitch(newPitch * EaseInOutSine(amt), SPF_INTERPOLATE);
 				A_SetViewRoll((sin(level.maptime*recoil_info.roll_speed)*recoil_info.roll_shake) * EaseInOutSine(amt), SPF_INTERPOLATE);
 				recoil_tics++;
 			}
