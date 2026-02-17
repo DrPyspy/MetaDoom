@@ -258,6 +258,37 @@ Class MetaDoomWeapon : Weapon
 class MeleePunch : _Boolean {}
 // Bullet Puffs
 
+Class Meta_VisSpark : VisualThinker
+{
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+	}
+	
+	override void Tick()
+	{
+		if ( bDESTROYED )
+			return;
+	
+		super.Tick();
+		
+		alpha -= 0.04;
+		vel.z -= 0.95;
+		
+		if ( cursector && pos.z < cursector.floorplane.ZatPoint(pos.xy) )
+		{
+			vel.z = -vel.z*0.5;
+			vel.x *= 0.8;
+			vel.y *= 0.8;
+		}
+		
+		if ( alpha <= 0.0 )
+		{
+			Destroy();
+		}
+	}
+}
+
 class MetaBulletPuff : Actor
 {
 	Default
@@ -281,7 +312,22 @@ class MetaBulletPuff : Actor
 	{
 	Spawn:
 		PUFF A 0;
-		PUFF A 4 BRIGHT A_SpawnDebris("MonsterTracerSpark");
+		PUFF A 4 BRIGHT // A_SpawnDebris("MonsterTracerSpark");
+		{
+			if ( !DamageSource ) return;
+			Vector3 defVel = Vec3To(DamageSource).Unit() * frandom(4,6);
+			for ( int i = 0; i < 4; i++ )
+			{
+				let p = Level.SpawnVisualThinker("Meta_VisSpark");
+				p.Texture = TexMan.CheckForTexture("PUFFA0");
+				p.alpha = frandom(0.8,1.0);
+				p.pos = pos;
+				p.vel = defVel+(frandom(-3,3),frandom(-3,3),2+frandom(0,6));
+				p.SetRenderStyle(STYLE_Add);
+				p.scale *= frandom(0.5,0.8);
+				p.flags = SPF_FULLBRIGHT;
+			}
+		}
 		PUFF B 2 BRIGHT A_SetTranslucent(0.9,0);
 		PUFF B 2 BRIGHT A_PlaySound("ricochet");
 		PUFF CD 4 BRIGHT;
