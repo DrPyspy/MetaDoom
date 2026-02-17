@@ -225,6 +225,12 @@ class MetaChaingun : MetaDoomWeapon
 		CHGN K 1 Bright A_Light1;
 		CHGN L 1 Bright;
 		Goto LightDone;
+	Glow3:
+		CHGN QR 1 Bright A_Light1;
+		Stop;
+	Glow4:
+		CHGN ST 1 Bright;
+		Stop;
 		
 	Altfire:
 		MACG E 0 A_JumpIfInventory("ChaingunTurretMode",1,"AltfireEnd");
@@ -293,8 +299,11 @@ class MetaChaingun : MetaDoomWeapon
 			A_PlaySound("weapons/chaingun/turretfire",6,1,1);
 			A_MetaChaingunRecoil2();
 			A_GunFlash("Flash3");
+			A_Overlay(100, "Glow3");
+			A_OverlayFlags(100, PSPF_RENDERSTYLE, true);
+			A_OverlayRenderstyle(100, STYLE_ADD);
 		}
-		CHTR BC 1 bright 
+		CHTR BC 1 
 		{
 			A_FireBullets(3,3,1,5,"MetaTurretPuff",FBF_USEAMMO);
 			A_FireBullets(3,3,1,5,"MetaTurretPuff",FBF_USEAMMO);
@@ -315,8 +324,11 @@ class MetaChaingun : MetaDoomWeapon
 			A_PlaySound("weapons/chaingun/turretfire",6,1,1);
 			A_MetaChaingunRecoil2();
 			A_GunFlash("Flash4");
+			A_Overlay(100, "Glow4");
+			A_OverlayFlags(100, PSPF_RENDERSTYLE, true);
+			A_OverlayRenderstyle(100, STYLE_ADD);
 		}
-		CHTR DA 1 bright 
+		CHTR DA 1 
 		{
 			A_FireBullets(3,3,1,5,"MetaTurretPuff",FBF_USEAMMO);
 			A_FireBullets(3,3,1,5,"MetaTurretPuff",FBF_USEAMMO);
