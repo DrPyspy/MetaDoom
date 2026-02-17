@@ -232,3 +232,8 @@ object MetaLightningStunFXZappy
 {
     frame ZAPP { light MetaLightningExplosion }
 }
+
+brightmap sprite MBFGD0
+{
+	map "sprites/weapons/bfg9000/MBFFD0.png"
+}
