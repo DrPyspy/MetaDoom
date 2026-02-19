@@ -152,6 +152,7 @@ weapons/bfg/fire2	bfgfire2
 weapons/bfg/fly		bfgfly
 weapons/bfg/explode	bfgxplo
 weapons/bfg/spray	bfgspry
+weapons/bfg/altcharge	"sounds/weapons/bfg/bfg_altcharge.ogg"
 
 // melee system
 $random weapons/melee/wiff	{ weapons/melee/wiff1 weapons/melee/wiff2 weapons/melee/wiff3 }
