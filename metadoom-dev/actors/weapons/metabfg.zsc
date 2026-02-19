@@ -671,4 +671,13 @@ Class MetaBFGAltfire : Actor
 		PLS1 CDEFG 4 Bright;
 		Stop;
 	}
+	
+	override int DoSpecialDamage(Actor target, int damage, name damagetype)
+	{
+		if ( target )
+		{
+			target.GiveInventory("MetaBFG9000_GotZapped", 2);
+		}
+		return damage;
+	}
 }
