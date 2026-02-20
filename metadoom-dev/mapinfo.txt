@@ -22,7 +22,7 @@ gameinfo
 	statscreen_single = "MetaDoomStatusScreen"
 	statusbarclass = "MetaDoomStatusBar"
 	messageboxclass = "MetaMessageBoxMenu"
-	AddEventHandlers = "MetaCodex_Event", "MetaOptionalProps", "MetaOptionalMonsters", "MetaDoom64Replacements", "MetaSigilReplacements",
+	AddEventHandlers = "Meta_OmniEventHandler", "MetaOptionalProps", "MetaOptionalMonsters", "MetaDoom64Replacements", "MetaSigilReplacements",
 						"MetaLoreItems", "MetaMarauderSpawnScript"
 	weaponslot = 1, "MetaPistol", "MetaBerserkFist", "MetaCheatDetector"
 	weaponslot = 2, "MetaHolyWaterPistol", "MetaShotgun"

@@ -67,6 +67,8 @@ class MetaDoomPlayer : PlayerPawn
 		damagefactor "NoHarmPlayer", 0;
 	}
 	
+	Array<Weapon> weaponSave;
+	
 	// This is a part of a gross hack to ensure that the player's angle isn't
 	// snapped around in a disorienting fashion if they get punched by another
 	// player in deathmatch.
@@ -615,6 +617,9 @@ class MetaDoomPlayer : PlayerPawn
 			fsteps = Footsteps(fstepsActor);
 			fsteps.Init(self);
 		}
+		
+		// [Py] init weapon slots
+		weaponSave.Reserve(12);
 	}
 	
 	override void CheckJump()
@@ -623,6 +628,68 @@ class MetaDoomPlayer : PlayerPawn
 		if ( player.cmd.buttons & BT_JUMP && !FindInventory("MetaChaingun_AltSlow") )
 		{
 			super.CheckJump();
+		}
+	}
+	
+	override Weapon PickWeapon(int slot, bool checkammo)
+	{
+		int i, j;
+
+		let player = self.player;
+		int Size = player.weapons.SlotSize(slot);
+		// Does this slot even have any weapons?
+		if (Size == 0)
+		{
+			return player.ReadyWeapon;
+		}
+		let ReadyWeapon = player.ReadyWeapon;
+		if (ReadyWeapon != null)
+		{
+			if ( weaponSave[slot] == null ) // [Py] no wep slot saved
+			{
+				let weap = super.PickWeapon(slot, checkammo);
+				if ( weap )
+				{
+					weaponSave[slot] = weap;
+					return weap;
+				}
+			}
+			else if ( weaponSave[slot] == ReadyWeapon )
+			{
+				MetaWeap_SwapWeaponClass(1);
+				return weaponSave[slot];
+			}
+			else
+			{
+				return weaponSave[slot];
+			}
+		}
+		return ReadyWeapon;
+	}
+	
+	void MetaWeap_SwapWeaponClass (int dir)
+	{
+		bool found;
+		int slot, index;
+		
+		if ( !player.ReadyWeapon ) return;
+
+		[found, slot, index] = player.weapons.LocateWeapon(player.ReadyWeapon.GetClass());
+		
+		int nextIndex = index+1;
+		if ( nextIndex >= player.weapons.SlotSize(slot) )
+		{
+			nextIndex = 0;
+		}
+		let weapontype = player.weapons.GetWeapon(slot, nextIndex);
+		if ( weapontype )
+		{
+			let weap = Weapon(player.mo.FindInventory(weapontype));
+			if ( weap )
+			{
+				weaponSave[slot] = weap;
+				player.PendingWeapon = weap;
+			}
 		}
 	}
 }

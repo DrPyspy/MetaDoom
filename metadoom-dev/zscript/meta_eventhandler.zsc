@@ -1,4 +1,14 @@
-Class MetaCodex_Event : EventHandler
+/*
+----------------------------
+MetaDoom
+ZScript
+Omni Event Handler
+----------------------------
+*/
+
+// Handles most event-related things.
+
+Class Meta_OmniEventHandler : EventHandler
 {
 	bool Meta_ThingExists(name clsname)
 	{
@@ -70,5 +80,22 @@ Class MetaCodex_Event : EventHandler
 				players[consoleplayer].mo.GiveInventory("MetaCodex_Backpack2",1);
 			}
 		}
+	}
+	
+	override void NetworkProcess (ConsoleEvent e)
+	{
+		if ( e.name.IndexOf("metadoom") != 0 ) return;
+		
+		Array<string> cmds;
+		e.name.Split(cmds, ":");
+		
+		if ( cmds.Size() < 2 ) return;
+		
+		let player = players[e.Player];
+		
+		/*if ( cmds[1] ~== "nextweapclass" )
+		{
+			MetaDoomPlayer(player.mo).MetaWeap_SwapWeaponClass(1);
+		}*/
 	}
 }

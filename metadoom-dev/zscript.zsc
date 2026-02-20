@@ -14,8 +14,9 @@ version "4.0"
 // Codex Stuff
 #include "zscript/codex/pyparse.zsc" // Sets up the classes for parsing
 
+#include "zscript/meta_eventhandler.zsc" // [Py] Big eventhandler :)
+
 #include "zscript/codex/metacodex_inventory.zsc" // The inventory items (important!)
-#include "zscript/codex/metacodex_event.zsc" // Controls the inventory handouts for the codex (also important!)
 #include "zscript/codex/metacodex_menu.zsc" // The menu itself (sans drawing)
 #include "zscript/codex/metacodex_parser.zsc" // Parses shit
 #include "zscript/codex/metacodex_drawer.zsc" // Draws shit
