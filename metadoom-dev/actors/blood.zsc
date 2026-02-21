@@ -140,6 +140,50 @@ class GreenBlood : XBlood
 	}
 }
 
+Class Meta_FlyingBlood : VisualThinker
+{
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+		alpha = 1.0;
+		scale = (1.0,1.0);
+	}
+	
+	static void SpawnMe(Vector3 pos)
+	{
+		let p = Level.SpawnVisualThinker("Meta_FlyingBlood");
+		p.Texture = TexMan.CheckForTexture("BLUDF0");
+		p.pos = pos;//pos + (0,0,random(8,32));
+		//double angle = random(0,360);
+		//p.vel = (cos(angle)*4, sin(angle)*4, cos(random(0,160))*4);
+	}
+	
+	override void Tick()
+	{
+		if ( bDESTROYED )
+			return;
+	
+		super.Tick();
+		
+		vel.z -= 1;
+		
+		if ( !cursector )
+		{
+			Destroy();
+			return;
+		}
+		
+		if ( pos.z < cursector.floorplane.ZatPoint(pos.xy) )
+		{
+			Vector3 newPos = (pos.x, pos.y, cursector.floorplane.ZatPoint(pos.xy));
+			//A_SpawnItem("XBloodspot", 0, 5)
+			//if ( splat ) splat.A_PlaySound("effects/blood");
+			S_StartSoundAt(newPos, "effects/blood", 0);
+			Destroy();
+		}
+	}
+}
+
 class FlyingBlood : Gibs1
 {
 	Default
@@ -170,7 +214,7 @@ class FlyingBlood : Gibs1
 		BLUD F 1;
 		TNT1 A 0 
 		{
-			A_SpawnItem("BloodSplatSmall"); //A_SpawnItem("XBloodspot", 0, 5)
+			//A_SpawnItem("BloodSplatSmall"); //A_SpawnItem("XBloodspot", 0, 5)
 			A_PlaySound("effects/blood");
 		}
 		Stop;
@@ -193,7 +237,7 @@ class FlyingBloodCheap : FlyingBlood
 	MakeAStain:
 		TNT1 A 0 
 		{
-			A_SpawnItem("BloodSplatSmall"); //A_SpawnItem("XBloodspot", 0, 5)
+			//A_SpawnItem("BloodSplatSmall"); //A_SpawnItem("XBloodspot", 0, 5)
 			A_PlaySound("effects/blood");
 		}
 		Stop;
