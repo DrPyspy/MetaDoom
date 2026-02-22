@@ -10,26 +10,76 @@ Class Meta_VisualGib : VisualThinker
 {
 	int rollSpeed;
 	bool noBounce;
+	bool noTranslate;
+	bool noRoll;
+	int lastSplat;
+	TranslationID src_bloodtrans;
+	Color src_bloodcolor;
+	
+	double frame;
+	Array<TextureID> frames;
+	TextureID frame_floor;
 	
 	override void PostBeginPlay()
 	{
 		super.PostBeginPlay();
+		
+		if ( frames.Size() <= 0 )
+		{
+			Destroy();
+			return;
+		}
+		
 		alpha = 1.0;
 		scale = (1.0,1.0);
-		roll = random(-45,45);
-		rollSpeed = random(0,1) ? 5 : -5;
+		if ( !noRoll )
+		{
+			roll = random(-45,45);
+			rollSpeed = random(0,1) ? 5 : -5;
+		}
 		flags = SPF_ROLL|SPF_ROLLCENTER|SPF_NOFACECAMERA|SPF_NO_XY_BILLBOARD;
+		
+		if ( !noTranslate )
+		{
+			Translation = src_bloodtrans;
+		}
+		
+		Texture = frames[0];
 	}
 	
 	bool stickFloor;
 	
-	static Meta_VisualGib SpawnMe(string tex, Vector3 pos, Vector3 vel)
+	void SetFrames(string framelist)
 	{
-		let p = Level.SpawnVisualThinker("Meta_VisualGib");
-		p.Texture = TexMan.CheckForTexture(tex);
+		Array<String> tmp;
+		framelist.Split(tmp, ",");
+		for ( int i = 0; i < tmp.Size(); i++ )
+		{
+			frames.Push(TexMan.CheckForTexture(tmp[i]));
+		}
+	}
+	
+	void SetFloorFrame(string frame)
+	{
+		frame_floor = TexMan.CheckForTexture(frame);
+	}
+	
+	static Meta_VisualGib SpawnGib(Actor source, Vector3 pos)
+	{
+		let p = Meta_VisualGib(Level.SpawnVisualThinker("Meta_VisualGib"));
+		
 		p.pos = pos;
-		p.vel = vel;
-		return Meta_VisualGib(p);
+		double angle = random(0,360);
+		int speed = random(0,5);
+		p.vel = (cos(angle)*speed, sin(angle)*speed, random(8,18));
+		
+		if ( source )
+		{
+			p.src_bloodtrans = source.BloodTranslation;
+			p.src_bloodcolor = source.BloodColor;
+		}
+		
+		return p;
 	}
 	
 	override void Tick()
@@ -39,7 +89,13 @@ Class Meta_VisualGib : VisualThinker
 	
 		super.Tick();
 		
+		if ( !cursector )
+		{
+			return;
+		}
+		
 		double floorz = cursector.floorplane.ZatPoint(pos.xy);
+		double ceilingz = cursector.ceilingplane.ZatPoint(pos.xy);
 		
 		if ( stickFloor )
 		{
@@ -47,7 +103,16 @@ Class Meta_VisualGib : VisualThinker
 			return;
 		}
 		
-		Meta_FlyingBlood.SpawnMe(pos);
+		Texture = frames[int(floor(frame))];
+		frame += 0.35;
+		if ( frame >= frames.Size() )
+		{
+			frame = 0;
+		}
+		
+		lastSplat++;
+		
+		Meta_FlyingBlood.SpawnBlood(pos, src_bloodtrans);
 		roll += rollSpeed;
 		
 		let tracer = new('LineTracer');
@@ -59,6 +124,8 @@ Class Meta_VisualGib : VisualThinker
 		{
 			if ( noBounce )
 			{
+				let bloodsplat = Actor.Spawn("BloodSplat", (pos.x, pos.y, floorz));
+				if ( src_bloodcolor.a > 0 ) { bloodsplat.SetShade(src_bloodcolor); }
 				Destroy();
 				return;
 			}
@@ -67,20 +134,32 @@ Class Meta_VisualGib : VisualThinker
 			
 			if ( abs(vel.z) <= 2 )
 			{
-				let bloodsplat = Actor.Spawn("BloodSplatSmall", (pos.x, pos.y, floorz));
+				let bloodsplat = Actor.Spawn("BloodSplat", (pos.x, pos.y, floorz));
+				if ( src_bloodcolor.a > 0 ) { bloodsplat.SetShade(src_bloodcolor); }
 				stickFloor = true;
+				if ( frame_floor )
+				{
+					Texture = frame_floor;
+				}
 				vel *= 0;
 			}
 			else
 			{
-				if ( level.maptime % 5 == 0 )
+				/*if ( lastSplat >= 35 )
 				{
 					let bloodsplat = Actor.Spawn("BloodSplatSmall", (pos.x, pos.y, floorz));
-				}
+					bloodsplat.SetShade(src_bloodcolor);
+					lastSplat = 0;
+				}*/
 				vel.x *= 0.8;
 				vel.y *= 0.8;
 				vel.z *= -0.5;
 			}
+		}
+		else if ( res.HitType == TRACE_HitCeiling || pos.z >= ceilingz )
+		{
+			vel.z = vel.z * -1;
+			pos = res.HitPos - res.HitVector;
 		}
 		else if ( res.HitType == TRACE_HitWall )
 		{
@@ -95,34 +174,6 @@ Class Meta_VisualGib : VisualThinker
 		}
 		
 		vel.z -= 1;
-		
-		/*if ( cursector )
-		{
-			double nextZ = (pos.z+vel.z);
-			if ( nextZ >= cursector.ceilingplane.ZatPoint(pos.xy) )
-			{
-				Vector3 newPos = (pos.x, pos.y, cursector.ceilingplane.ZatPoint(pos.xy));
-				pos = newPos;
-				vel.z *= -1;
-			}
-			else if ( nextZ <= cursector.floorplane.ZatPoint(pos.xy) )
-			{
-				Vector3 newPos = (pos.x, pos.y, cursector.floorplane.ZatPoint(pos.xy));
-				pos = newPos;
-				S_StartSoundAt(newPos, "effects/blood", 0);
-				if ( abs(vel.z) <= 2 )
-				{
-					stickFloor = true;
-					vel *= 0;
-				}
-				else
-				{
-					vel.z *= -0.5;
-					vel.xy *= 0.6;
-				}
-				//Destroy();
-			}
-		}*/
 	}
 }
 
@@ -135,14 +186,17 @@ class MetaGibber : Actor
 	+NOCLIP
 	}
 	
-	action void A_SpawnGib(string tex, int chance = 128, bool noBounce = false)
+	action void A_SpawnGib(string tex, int chance = 128)
 	{
 		if ( random(0,255) > chance ) return;
-		double angle = random(0,360);
+		let p = Meta_VisualGib.SpawnGib(invoker, pos);
+		p.SetFrames(tex);
+		p.noTranslate = true;
+		/*double angle = random(0,360);
 		int speed = random(0,5);
 		Vector3 newVel = (cos(angle)*speed, sin(angle)*speed, random(8,18));
 		let blud = Meta_VisualGib.SpawnMe(tex, pos, newVel);
-		blud.noBounce = noBounce;
+		blud.noBounce = noBounce;*/
 	}
 	
 	states
@@ -154,12 +208,21 @@ class MetaGibber : Actor
 		{
 			for (int i = 0; i < 5; i++)
 			{
-				A_SpawnGib("BLUDF0", noBounce: true);
+				//A_SpawnGib("BLUDF0", noBounce: true);
 				//A_SpawnProjectile ("FlyingBlood", random(8,32), 0, random (0, 360), 2, random(0, 160));
-				A_SpawnProjectile ("MetaSploosh", random(8,32), 0, random (0, 360), 2, random(0, 160));
+				//A_SpawnProjectile ("MetaSploosh", random(8,32), 0, random (0, 360), 2, random(0, 160));
+				Meta_VisualGib gib;
+				
+				gib = Meta_VisualGib.SpawnGib(self, pos);
+				gib.SetFrames("BLUDF0");
+				gib.noBounce = true;
+				
+				gib = Meta_VisualGib.SpawnGib(self, pos);
+				gib.SetFrames("GIBSC0");
+				gib.noBounce = true;
 			}
 			
-			A_SpawnItem("BloodSplat");
+			let bloodsplat = Actor.Spawn("BloodSplat", (pos.x, pos.y, pos.z));
 		}
 		TNT1 A 1 A_SpawnGib("JIBSA0");
 		TNT1 A 0 A_SpawnGib("JIBSB0");

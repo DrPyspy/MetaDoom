@@ -158,6 +158,14 @@ Class Meta_FlyingBlood : VisualThinker
 		//p.vel = (cos(angle)*4, sin(angle)*4, cos(random(0,160))*4);
 	}
 	
+	static void SpawnBlood(Vector3 pos, TranslationID trans)
+	{
+		let p = Level.SpawnVisualThinker("Meta_FlyingBlood");
+		p.Texture = TexMan.CheckForTexture("BLUDF0");
+		p.Translation = trans;
+		p.pos = pos;
+	}
+	
 	override void Tick()
 	{
 		if ( bDESTROYED )
