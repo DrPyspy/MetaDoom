@@ -112,11 +112,13 @@ weapons/machinegun/dry		mgdryf
 weapons/machinegun/get		mgget
 weapons/machinegun/use		mguse
 
-$random weapons/machinegun/missile	{ weapons/machinegun/missile1 weapons/machinegun/missile2 weapons/machinegun/missile3 weapons/machinegun/missile4 }
-weapons/machinegun/missile1	mgrock1
-weapons/machinegun/missile2	mgrock2
-weapons/machinegun/missile3	mgrock3
-weapons/machinegun/missile4	mgrock4
+$random weapons/machinegun/missile
+{
+	weapons/machinegun/missile1 weapons/machinegun/missile2 weapons/machinegun/missile3
+}
+weapons/machinegun/missile1	"sounds/weapons/machinegun/mg_missile1.ogg"
+weapons/machinegun/missile2	"sounds/weapons/machinegun/mg_missile2.ogg"
+weapons/machinegun/missile3	"sounds/weapons/machinegun/mg_missile3.ogg"
 
 // rocketlauncher
 weapons/rocketlauncher/fire	rlncfire
