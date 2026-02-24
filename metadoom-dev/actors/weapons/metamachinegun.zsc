@@ -137,7 +137,7 @@ class MetaMachineGun : MetaDoomWeapon
 		Goto Ready;
 	Altfirefire:
 		MACG J 0 A_JumpIf(CountInv("Clip") < 5, "AltfireEnd");
-		MACG D 2
+		MACG D 0
 		{
 			A_StartSound("weapons/machinegun/missile", CHAN_WEAPON, pitch: frandom(0.8,1.02));
 			
@@ -146,14 +146,6 @@ class MetaMachineGun : MetaDoomWeapon
 				A_PlaySound("powerups/quad/use", CHAN_5);
 			}
 			
-			if ( invoker.altFire_fireSide )
-			{
-				A_GunFlash("AltFlashLeft");
-			}
-			else
-			{
-				A_GunFlash("AltFlashRight");
-			}
 			A_AlertMonsters();
 			A_Overlay(14, "Overlay.AltRecoil");
 			
@@ -184,8 +176,27 @@ class MetaMachineGun : MetaDoomWeapon
 			recoil.roll_shake = 0.25;
 			recoil.roll_speed = 32+random(-2,2);
 			A_MetaRecoil(recoil);
+			
+			if ( invoker.altFire_fireSide )
+			{
+				A_GunFlash("AltFlashLeft");
+				return resolveState("AltFireLeft");
+			}
+			else
+			{
+				A_GunFlash("AltFlashRight");
+				return resolveState("AltFireRight");
+			}
 		}
-		MACG DD 2;
+		Wait;
+	AltFireLeft:
+		MACG FF 2;
+		Goto AltFireFinishFire;
+	AltFireRight:
+		MACG EE 2;
+		Goto AltFireFinishFire;
+	AltFireFinishFire:
+		MACG D 2;
 		MACG D 0 A_ReFire;
 		Goto Ready;
 	Altfire:
