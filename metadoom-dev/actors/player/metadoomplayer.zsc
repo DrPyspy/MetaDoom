@@ -647,9 +647,13 @@ class MetaDoomPlayer : PlayerPawn
 		{
 			if ( weaponSave[slot] == null ) // [Py] no wep slot saved
 			{
-				let weap = super.PickWeapon(slot, checkammo);
-				if ( weap )
+				for ( i = Size-1; i >= 0; i-- )
 				{
+					let weapontype = player.weapons.GetWeapon(slot, i);
+					if ( !weapontype ) continue;
+					
+					let weap = Weapon(player.mo.FindInventory(weapontype));
+					if ( !weap ) continue;
 					weaponSave[slot] = weap;
 					return weap;
 				}
