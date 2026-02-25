@@ -1,9 +1,21 @@
-= Weapon Changes
+= QoL Changes =
+	- Enemy giblets have been mostly ported into VisualThinkers, putting less strain on performance.
 
-- Universal
-	- Weapon slots now save your last chosen weapon, allowing you to select your preferred weapons instantly.
-	- Added a smoother system for recoil that retains the visual impact without causing the view to hitch.
-- Chaingun
-	- Chaingun alt-fire now heavily slows the player instead of freezing them completely.
-- Grenade Launcher
-	- Grenade projectiles now shoot out a little farther.
+= Weapon Changes =
+	- Universal
+		- Weapon slots now save your last chosen weapon, allowing you to select your preferred weapons instantly.
+		- Added a smoother system for recoil that retains the visual impact without causing the view to hitch.
+	- Machine Gun
+		- Sprites have been painted over and revamped!
+		- Missiles now deviate slightly, veering off course the longer they're flying.
+	- Chaingun
+		- Sprites have been painted over and revamped!
+		- Chaingun alt-fire now heavily slows the player instead of freezing them completely.
+	- Grenade Launcher
+		- Grenade projectiles now shoot out a little farther.
+	- BFG 9000
+		- The projectile now shoots tendrils onto more than one enemy as it passes by, dealing more damage overall.
+		- Tendril range is longer.
+		- Enemies hit by the tendrils will be briefly stunned.
+		- The projectile and its tendrils always cause enemies to gib. Delicious!
+		- Alt-fire shoots out more projectiles, behaving more similarly to the beta BFG and dealing more consistent damage.
