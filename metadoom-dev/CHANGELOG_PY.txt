@@ -1,0 +1,9 @@
+= Weapon Changes
+
+- Universal
+	- Weapon slots now save your last chosen weapon, allowing you to select your preferred weapons instantly.
+	- Added a smoother system for recoil that retains the visual impact without causing the view to hitch.
+- Chaingun
+	- Chaingun alt-fire now heavily slows the player instead of freezing them completely.
+- Grenade Launcher
+	- Grenade projectiles now shoot out a little farther.

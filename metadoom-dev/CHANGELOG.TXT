@@ -1,11 +1,6 @@
 NEXT
 ====
 
-<<<!DrPyspy branch changes!>>>:
-- Added a smoother system for recoil that retains the visual impact without causing the view to hitch.
-- Chaingun alt-fire now heavily slows the player instead of freezing them completely.
-- Grenade launcher projectiles now shoot out a little farther.
-
 Optional Content Changes:
 - The various replacements for Commander Keen will no longer be targeted for
   monster effects when playing with the Corruption Cards mod (Thanks DrPySpy!)
