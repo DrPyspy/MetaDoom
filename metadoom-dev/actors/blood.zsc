@@ -629,6 +629,11 @@ class BloodSplat : Actor
 		"####" "#" 1 A_FadeOut(0.02);
 		Wait;
 	}
+	
+	override bool CanCollideWith(Actor other, bool passive)
+	{
+		return false;
+	}
 }
 
 // Nothing to adjust here! We already have the CheckClass above handling the
