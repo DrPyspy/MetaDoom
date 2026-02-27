@@ -33,6 +33,12 @@ Class MetaDoomWeapon : Weapon
 		//+INVENTORY.ALWAYSPICKUP
 		+DONTGIB
 	}
+	
+	static double GetShake()
+	{
+		return -1+(2*(level.maptime%2));
+	}
+	
   	States
 	{
 	DeadDude:
