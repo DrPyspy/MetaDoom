@@ -57,7 +57,6 @@ class MetaRocketLauncher : MetaDoomWeapon
 	action void A_Meta_RocketOverlay()
 	{
 		int rocketsLeft = invoker.owner.CountInv("RocketAmmo");
-		Console.Printf(""..rocketsLeft);
 		for ( int i = 1; i < 6; i++ )
 		{
 			int id = PSP_WEAPON+150+i;
@@ -69,7 +68,6 @@ class MetaRocketLauncher : MetaDoomWeapon
 					case 2: A_Overlay(id, "Overlay.Rockets2"); break;
 					case 3: A_Overlay(id, "Overlay.Rockets3"); break;
 					case 4: A_Overlay(id, "Overlay.Rockets4"); break;
-					case 5: A_Overlay(id, "Overlay.Rockets5"); break;
 				}
 				continue;
 			}
@@ -167,23 +165,20 @@ class MetaRocketLauncher : MetaDoomWeapon
 			TNT1 A -1;
 			stop;
 			
-		Overlay.Rockets5:
-			RLAU H -1;
-			Stop;
 		Overlay.Rockets4:
-			RLAU I 3;
-			RLAU J -1;
+			RLAU H 3;
+			RLAU I -1;
 			Stop;
 		Overlay.Rockets3:
-			RLAU K 3;
-			RLAU L -1;
+			RLAU J 3;
+			RLAU K -1;
 			Stop;
 		Overlay.Rockets2:
-			RLAU M 3;
-			RLAU N -1;
+			RLAU L 3;
+			RLAU M -1;
 			Stop;
 		Overlay.Rockets1:
-			RLAU O 3;
+			RLAU N 3;
 			Stop;
 	}
 }
