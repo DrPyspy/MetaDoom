@@ -349,7 +349,8 @@ class MetaSuperShotgun : MetaDoomWeapon
 					}
 				}
 			}
-			if ( hook != null )
+			
+			if ( hookActive || hooktimer > 0 )
 			{
 				owner.player.SetPSprite(-2, resolveState("Null"));
 			}
