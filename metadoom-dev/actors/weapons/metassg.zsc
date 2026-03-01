@@ -471,11 +471,23 @@ Class MetaHookProjectile : Actor
 	property maxdistance : maxdistance;
 	bool hitadude;
 	actor HookedDude;
+	bool returning;
+	double shimmyDist;
+	
+	const CHAINLINKDIST = 16;
+	
+	Array<MetaSuperShotgun_HookChain> chains;
 	
 	override void PostBeginPlay()
 	{
 		super.PostBeginPlay();
 		spawnPos = pos;
+		for ( int i = 0; i < 32; i ++ )
+		{
+			let p = MetaSuperShotgun_HookChain(Level.SpawnVisualThinker("MetaSuperShotgun_HookChain"));
+			chains.Push(p);
+		}
+		shimmyDist = 4;
 	}
 	override void Tick()
 	{
@@ -484,7 +496,30 @@ Class MetaHookProjectile : Actor
 			return;
 			
 		// There's almost certainly a less crap way to do this, but...
-		A_CustomRailgun (0, 0, 0, 0, RGF_SILENT|RGF_NOPIERCING|RGF_CENTERZ, 1, 0, "MetaNothingPuff", 0, 0, 4096, 1, 32, 0, "MetaHookProjectileTrail");
+		//A_CustomRailgun (0, 0, 0, 0, RGF_SILENT|RGF_NOPIERCING|RGF_CENTERZ, 1, 0, "MetaNothingPuff", 0, 0, 4096, 1, 32, 0, "MetaHookProjectileTrail");
+		double targAngle = target.angle+90;
+		Vector3 pos_target = (target.pos.x, target.pos.y, target.player.viewz-16);// + (0,0,32 + player.Get);
+		Vector3 pos_start = pos;
+		Vector3 pos_current = pos;
+		Vector3 dir = (pos_target - pos_current).Unit();
+		double len = level.Vec3Diff(pos_start, pos_target).Length() / (chains.Size());
+		if ( returning || hitadude )
+		{
+			if ( shimmyDist > 0.0 )
+			{
+				shimmyDist -= 1.0;
+			}
+		}
+		for ( int i = 0; i < chains.Size(); i++ )
+		{
+			if ( !chains[i] ) continue;
+			pos_current = level.Vec3Offset(pos_current, dir * len);
+			double idx = (360*2) * (i/double(chains.Size()));
+			double length = sin(180*(i/double(chains.Size()))) * shimmyDist;
+			double shimmy = cos(idx+(level.maptime*32)) * length;
+			
+			chains[i].SetNewPos(pos_current + (cos(targAngle) * shimmy, sin(targAngle) * shimmy, 0));
+		}
 		
 		if (level.Vec3Diff(pos, spawnPos).length() > maxdistance && !inStateSequence(curstate,FindState("Flyback")))
 			SetStateLabel("Flyback");
@@ -568,6 +603,7 @@ Class MetaHookProjectile : Actor
 		{
 			A_StartSound("weapons/ssg/hook/chain", CHAN_BODY, 0, 1.0, ATTN_NORM, frandom (0.9, 1.2));
 			bNOCLIP = true;
+			returning = true;
 		}
 		SMHK AAAA 1
 		{
@@ -612,6 +648,10 @@ Class MetaHookProjectile : Actor
 		{
 			weaponSource.HookEnded();
 		}
+		for ( int i = 0; i < chains.Size(); i++ )
+		{
+			chains[i].Destroy();
+		}
 	}
 }
 		
@@ -628,7 +668,7 @@ Class MetaHookControl : Inventory
 		inventory.maxamount 1;
 	}	
 	
-	override void Tick() {}
+	override void Tick(){}
 	
 	override void DoEffect()
 	{
@@ -665,5 +705,31 @@ Class MetaHookControl : Inventory
 				Console.printf("Hooking blocked at feet, push up");
 			master.vel.z = 8;
 		}
+	}
+}
+
+Class MetaSuperShotgun_HookChain : VisualThinker
+{
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+		Texture = TexMan.CheckForTexture("SMHTA0");
+	}
+
+	Vector3 targPos;
+	
+	void SetNewPos(Vector3 newPos)
+	{
+		targPos = newPos;
+	}
+	
+	override void Tick()
+	{
+		if ( bDESTROYED )
+			return;
+	
+		super.Tick();
+		prev = pos;
+		pos = targPos;
 	}
 }
