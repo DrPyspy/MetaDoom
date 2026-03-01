@@ -10,9 +10,10 @@
 		- New sounds that play when the hook is on cooldown.
 		- Hook cooldown reduced to 4 seconds.
 		- Hook is now 'used up' if it has hit an enemy, no more refills if you kill the hooked enemy early.
+		- Hook chain has been remade with VisualThinkers! It also looks a bit fancier now, too!
 	- Machine Gun
 		- Sprites have been painted over and revamped!
-		- Missiles now deviate slightly, veering off course the longer they're flying.
+		- Missiles now deviate slightly, veering off course the longer they fly.
 	- Chaingun
 		- Sprites have been painted over and revamped!
 		- Chaingun alt-fire now heavily slows the player instead of freezing them completely.
