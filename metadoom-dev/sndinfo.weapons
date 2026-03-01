@@ -93,6 +93,8 @@ weapons/ssg/hook/hitworld		smhkwrld
 
 weapons/ssg/hook/chain			smhkchn1
 weapons/ssg/hook/charge			ssghcrg
+weapons/ssg/hook/cooldown/chain "sounds/weapons/ssg/ssg_hookcooldown_chainloop.ogg"
+weapons/ssg/hook/cooldown/zip "sounds/weapons/ssg/ssg_hookcooldown_ziploop.ogg"
 
 $random weapons/ssg/hook/stick { weapons/ssg/hook/stick1 weapons/ssg/hook/stick2 weapons/ssg/hook/stick3 }
 weapons/ssg/hook/stick1			smhkstk1
