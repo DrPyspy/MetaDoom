@@ -5,6 +5,11 @@
 	- Universal
 		- Weapon slots now save your last chosen weapon, allowing you to select your preferred weapons instantly.
 		- Added a smoother system for recoil that retains the visual impact without causing the view to hitch.
+	- Super Shotgun
+		- Sprites have been painted over and revamped!
+		- New sounds that play when the hook is on cooldown.
+		- Hook cooldown reduced to 4 seconds.
+		- Hook is now 'used up' if it has hit an enemy, no more refills if you kill the hooked enemy early.
 	- Machine Gun
 		- Sprites have been painted over and revamped!
 		- Missiles now deviate slightly, veering off course the longer they're flying.
@@ -14,6 +19,7 @@
 	- Grenade Launcher
 		- Grenade projectiles now shoot out a little farther.
 	- BFG 9000
+		- Sprites have been painted over and revamped!
 		- The projectile now shoots tendrils onto more than one enemy as it passes by, dealing more damage overall.
 		- Tendril range is longer.
 		- Enemies hit by the tendrils will be briefly stunned.
