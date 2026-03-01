@@ -454,7 +454,7 @@ Class MetaHookProjectile : Actor
 		MetaHookProjectile.maxdistance 720;
 		projectile;
 		DamageFunction (0);
-		speed 25;
+		Speed 25;
 		+HITTRACER
 		+BLOODSPLATTER
 		+BLOCKASPLAYER
