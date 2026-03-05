@@ -31,7 +31,7 @@ version "4.0"
 
 // Menu Stuff
 #include "zscript/metaintermission.zsc"
-#include "zscript/metahud.zsc"
+#include "zscript/hud/metahud_v2.zsc"
 #include "zscript/boa_iconlistmenu.zsc"
 #include "zscript/metamenushit.zsc"
 #include "zscript/nash_menu.zsc"

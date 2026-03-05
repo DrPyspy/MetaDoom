@@ -1,0 +1,632 @@
+/*
+----------------------------
+MetaDoom
+ZScript Definitions
+Status Bar
+----------------------------
+*/
+
+// The HUD! ZScript edition. ZScript HUDs are also nasty, but they're mostly a
+// kind of nasty I can deal with. This port wasn't TOO troublesome, probably
+// because I got most of the profanity out of the way during JPF.
+
+class MetaDoomStatusBar : BaseStatusBar
+{
+	HUDFont mHUDFont;
+	HUDFont mIndexFont;
+	HUDFont mAmountFont;
+	InventoryBarState diparms;
+	HUDFont mSmallFont;
+	HUDFont mSmallFont2;
+	HUDFont mTinyFont;
+	
+	// You need a DynamicValueInterpolator for any value that you want to have interpolated
+	DynamicValueInterpolator mHealthInterpolator;
+	DynamicValueInterpolator mArmorInterpolator;
+	DynamicValueInterpolator mScoreInterpolator;
+	DynamicValueInterpolator mAmmoInterpolator;
+	
+	// Things for the Powerup bar system.
+	static const string powerupStuff[] =
+	{
+		//Name of Powerup Giver - Powerup Icon
+		"MetaHasteSphere","POWRPINS",
+		"MetaRadSuit","POWRSUIT",
+		"MetaLightAmp","POWRLAMP",
+		"MetaBerserkTimer","POWRBZRK",
+		"MetaQuadDamage","POWRQUAD",
+		"BufferLineDONOTEDIT","POWRFART" //This line has to be here for things to work
+	};
+	int barArraySize; //amount of 'columns' that the array has
+	int barArrayColumns; //size of the array divided by the columns
+	
+
+	override void Init()
+	{
+		Super.Init();
+		//SetSize(32, 320, 200);
+		SetSize(0, 320, 200);
+
+		// Create the fonts used for the HUD
+		Font fnt = "HUDFONT_DOOM";
+		mHUDFont = HUDFont.Create(fnt, fnt.GetCharWidth("0"), true, 1, 1);
+		fnt = "INDEXFONT_DOOM";
+		mIndexFont = HUDFont.Create(fnt, fnt.GetCharWidth("0"), true);
+		mAmountFont = HUDFont.Create("INDEXFONT");
+		//diparms = InventoryBarState.Create();
+		diparms = InventoryBarState.Create(mIndexfont, Font.CR_UNTRANSLATED, 1.0, "ARTIBOX", "INVCURS");
+		
+		mSmallFont = HUDFont.Create("SMALLFONT");
+		mSmallFont2 = HUDFont.Create("SMALLFONT2");
+		mTinyFont = HUDFont.Create("TINYBABY");
+		
+		// More Powerup Bar Shit
+		barArrayColumns = 2;
+		barArraySize = powerupStuff.Size()/barArrayColumns;
+		
+		// Initialize the interpolation variables
+		mHealthInterpolator = DynamicValueInterpolator.Create(0, 0.25, 1, 32);
+		mArmorInterpolator = DynamicValueInterpolator.Create(0, 0.25, 1, 32);
+		mScoreInterpolator = DynamicValueInterpolator.Create(0, 0.25, 1, 64000);
+		mAmmoInterpolator = DynamicValueInterpolator.Create(0, 0.25, 1, 32);
+	}
+
+	// What happens when a new game begins
+	override void NewGame ()
+	{
+		// Run the parent status bar's NewGame() function
+		Super.NewGame();
+
+		// Reset any interpolators that you declared
+		mHealthInterpolator.Reset(0);
+		mArmorInterpolator.Reset(0);
+		mScoreInterpolator.Reset(0);
+		mAmmoInterpolator.Reset(0);
+	}
+	
+	// What needs to run every tick
+	override void Tick()
+	{
+		// Run the parent status bar's Tick() function
+		Super.Tick();
+
+		// Update the value of the interpolators
+		mHealthInterpolator.Update(CPlayer.health); // Set the interpolator's value to this player's health
+		mArmorInterpolator.Update(GetArmorAmount());
+		mScoreInterpolator.Update(players[consoleplayer].mo.score);
+		Ammo ammo1, ammo2;
+		int ammomax;
+		int ammocount1, ammocount2;
+		[ammo1, ammo2, ammocount1, ammocount2] = GetCurrentAmmo();
+		mAmmoInterpolator.Update(ammocount1);
+	}
+
+	override void Draw (int state, double TicFrac)
+	{
+		Super.Draw (state, TicFrac);
+		
+		if ( screenblocks >= 11 )
+		{
+			return;
+		}
+		
+		BeginStatusBar();
+		
+		int x_off = 53;
+		int y = 170;
+		
+		let tex = TexMan.CheckForTexture("graphics/hud_v2/hud_main.png");
+		screen.DrawTexture(tex, false, -x_off, 0,
+			DTA_SrcWidth, 124, DTA_DestWidth, 124,
+			DTA_320x200, true
+			);
+		screen.DrawTexture(tex, false, 320+x_off-124, 0,
+			DTA_SrcX, 320-124,
+			DTA_SrcWidth, 124, DTA_DestWidth, 124,
+			DTA_320x200, true
+			);
+		screen.DrawTexture(tex, false, 160-48, 0,
+			DTA_SrcX, 160-48,
+			DTA_SrcWidth, 96, DTA_DestWidth, 96,
+			DTA_320x200, true
+			);
+			
+		DrawFaceBox();
+		DrawVitals();
+		
+		int x_right = 320 + x_off - 110;
+		int x_left = -x_off;
+		
+		DrawItemBox(x_left, y);
+		DrawKeys(x_left, y);
+		DrawScore(x_left, y);
+		DrawAmmo(x_right, y);
+		DrawReserve(x_right, y);
+		
+		return;
+		
+		if (state == HUD_StatusBar || automapactive)
+		{
+			DrawImage("HUDBACK", (0, 168), DI_ITEM_OFFSETS);
+			
+			// Stretching/tiling the backdrop for widescreen users.
+			int x1 = 0;
+			int x2 = 0;
+			for ( int i = 1; i < 6; i++ )
+			{
+				x1 = x1 - 320;
+				x2 = x2 + 320;
+				
+				DrawImage("HUDBACK", (x1, 168), DI_ITEM_OFFSETS);
+				DrawImage("HUDBACK", (x2, 168), DI_ITEM_OFFSETS);
+			}
+		}
+		
+		/*if (state == HUD_StatusBar)
+		{
+			BeginStatusBar();
+			DrawMainBar (TicFrac);
+		} else if (state == HUD_Fullscreen)	{
+			BeginStatusBar();
+			DrawMainBar (TicFrac);
+		} else if (state == HUD_AltHud) {
+			BeginStatusBar();
+			DrawAltBar (TicFrac);
+		}*/
+	}
+
+	/*protected void DrawMainBar (double TicFrac)
+	{
+		if (!CheckInventory("DisableHUD", 1))
+		{
+			// Everything's a seperate method for sanity's sake.
+			// This made sense at the time, I assure you.
+			DrawScore();
+			DrawHealth();
+			DrawArmor();
+			DrawKeys();
+			DrawAmmo();
+			DrawReserve();
+			DrawStats();
+			DrawFaceBox();
+			DrawItemBox();
+			DrawPowerupBars();
+		}
+	}*/
+
+	// Extremely cut down version of the HUD for weirdo althud-havers
+	protected void DrawAltBar (double TicFrac)
+	{
+		if (!CheckInventory("DisableHUD", 1))
+		{
+			DrawPowerupBars();
+		}
+	}
+	
+	void DrawScore(int x, int y)
+	{
+		// Draw frags in Deathmatch, score if not.
+		if (deathmatch || teamplay)
+		{
+			DrawImage("FGICON", (27, 171), DI_ITEM_OFFSETS);
+			DrawString(mSmallFont2, FormatNumber(CPlayer.FragCount, 3), (89, 172), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_RED);
+		} else {
+			DrawString(mSmallFont2, FormatNumber(mScoreInterpolator.GetValue(), 10), (x+107, y+9),
+			DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT|FNF_FILLZEROS, Font.CR_WHITE);
+		}
+	}
+	
+	void DrawVitals()
+	{
+		DrawImage("HPICON", (126, 189), DI_ITEM_OFFSETS);
+		DrawImage("APICON", (186, 189), DI_ITEM_OFFSETS);
+		DrawString(mSmallFont2, ""..CPlayer.health, (124, 190), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_WHITE);
+		DrawString(mSmallFont2, ""..GetArmorAmount(), (194, 190), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
+		/*DrawImage("HUDBAR", (36, 189), DI_ITEM_OFFSETS);*/
+		DrawBar("graphics/hud_v2/bar_health.png", "graphics/hud_v2/bar_vert.png", mHealthInterpolator.GetValue(), CPlayer.mo.GetMaxHealth(false), (137, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		DrawBar("graphics/hud_v2/bar_armor.png", "graphics/hud_v2/bar_vert.png", mArmorInterpolator.GetValue(), 100, (178, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		/*if (mHealthInterpolator.GetValue() > 100)
+		{
+			DrawBar("LIFEBAR2", "MTBAR3", mHealthInterpolator.GetValue() - 100, CPlayer.mo.GetMaxHealth(true),
+			(37, 190), 0, SHADER_HORZ, DI_ITEM_OFFSETS);
+		}
+		
+		// special powerup timer for invuln sphere
+		if (CheckInventory("PowerMetaInvulnerable", 1))
+		{
+			int itemTimeLeft, itemDuration;
+			[itemTimeLeft,itemDuration] = CPlayer.mo.GetEffectTicsForItem("MetaInvulnerabilitySphere");
+			
+			DrawImage("POWRINV", (26, 188), DI_ITEM_OFFSETS);			
+			DrawBar("POWRBAR", "MTBAR3", itemTimeLeft, itemDuration, (37, 190), 0, SHADER_HORZ, DI_ITEM_OFFSETS);
+		}*/
+	}
+	
+	void DrawArmor()
+	{
+		if (GetArmorSavePercent() == 50)
+		{
+			DrawImage("AP2ICON", (27, 180), DI_ITEM_OFFSETS);
+		} else {
+			DrawImage("APICON", (27, 180), DI_ITEM_OFFSETS);
+		}
+		DrawString(mSmallFont2, FormatNumber(GetArmorAmount(), 3), (24, 180), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_WHITE);
+		
+		DrawImage("HUDBAR", (36, 180), DI_ITEM_OFFSETS);
+		DrawBar("ARMRBAR", "MTBAR", mArmorInterpolator.GetValue(), 100, (37, 181), 0, SHADER_HORZ, DI_ITEM_OFFSETS);
+		if (mArmorInterpolator.GetValue() > 100)
+		{
+			DrawBar("ARMRBAR2", "MTBAR3", (mArmorInterpolator.GetValue() - 100), 100, (37, 181), 0, SHADER_HORZ, DI_ITEM_OFFSETS);
+		}
+	}
+	
+	void DrawKeys(int x, int y)
+	{
+		int kX = 43;
+		int kY = 1;
+		
+		bool locks[6];
+		String icon;
+		
+		for ( int i = 0; i < 6; i++ )
+		{
+			bool gotKey = CPlayer.mo.CheckKeys(i + 1, false, true);
+			if ( !gotKey ) continue;
+			switch (i)
+			{
+				case 0: icon = "graphics/hud_v2/keys/key_redcard.png"; break;
+				case 1: icon = "graphics/hud_v2/keys/key_bluecard.png"; break;
+				case 2: icon = "graphics/hud_v2/keys/key_yellowcard.png"; break;
+				case 3: icon = "graphics/hud_v2/keys/key_redskull.png"; break;
+				case 4: icon = "graphics/hud_v2/keys/key_blueskull.png"; break;
+				case 5: icon = "graphics/hud_v2/keys/key_yellowskull.png"; break;
+			}
+			DrawImage(icon, (x+kX, y+kY), DI_ITEM_OFFSETS);
+			kX += 6;
+		}
+	}
+	
+	void DrawAmmo (int x, int y)
+	{
+		string ammoIcon = "AMICON";
+		if (CPlayer.ReadyWeapon != null)
+		{
+			if (CheckWeaponSelected("MetaPistol") && meta_pistolammo == 0)
+			{
+				ammoIcon = "AMICNBAT";
+			} else if (CPlayer.ReadyWeapon.Ammo1 is "Shell")
+			{
+				ammoIcon = "AMICNSHL";
+			} else if (CPlayer.ReadyWeapon.Ammo1 is "RocketAmmo")
+			{
+				ammoIcon = "AMICNRCK";
+			} else if (CPlayer.ReadyWeapon.Ammo1 is "Cell")
+			{
+				ammoIcon = "AMICNPLS";
+			} else if (CPlayer.ReadyWeapon.Ammo1 is "HolyWater")
+			{
+				ammoIcon = "AMICNWAT";
+			} else if (CPlayer.ReadyWeapon.Ammo1 is "HalonCannister")
+			{
+				ammoIcon = "AMICNEXT";
+			} else if (CPlayer.ReadyWeapon.Ammo1 is "BFGAmmo")
+			{
+				ammoIcon = "AMICNBFG";
+			} else if (CPlayer.ReadyWeapon.Ammo1 is "SoulAmmo")
+			{
+				ammoIcon = "AMICNSOL";
+			}/* else if (CPlayer.ReadyWeapon.Ammo1 is "DogGunHealth")
+			{
+				DrawImage("HPICON", (283, 180), DI_ITEM_OFFSETS);
+			} else {
+				DrawImage("AMICON", (283, 180), DI_ITEM_OFFSETS);
+			}*/
+		}
+		DrawImage(ammoIcon, (x+2, y+8), DI_ITEM_OFFSETS);
+		
+		//DrawImage("HUDBAR", (225, 180), DI_ITEM_OFFSETS);
+		
+		// Draw current ammo amounts
+		Ammo ammo1, ammo2;
+		int ammomax;
+		int ammocount1, ammocount2;
+		[ammo1, ammo2, ammocount1, ammocount2] = GetCurrentAmmo();
+		
+		// Get the maximum ammo of the current weapon, but WITHOUT crashing
+		if (ammo1 != NULL)
+		{ ammomax = CPlayer.ReadyWeapon.Ammo1.MaxAmount; }
+		
+		string ammoReadout = ammo1 ? FormatNumber(ammocount1, 3) : "---";
+		DrawString(mSmallFont2, ammoReadout, (x+34, y+9), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_WHITE);
+		
+			/*if (meta_pistolammo == 1 && CheckWeaponSelected("MetaPistol"))
+			{
+				DrawString(mSmallFont2, FormatNumber(GetAmount("Clip"), 3), (295, 180), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
+			} else {
+				DrawString(mSmallFont2, "---", (295, 180), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
+			}*/
+		
+		int slotX = 85-(6*8);
+		int slotY = 0;
+		bool found;
+		int slot, index;
+		if ( CPlayer.ReadyWeapon )
+		{
+			[found, slot, index] = CPlayer.weapons.LocateWeapon(CPlayer.ReadyWeapon.GetClass());
+		}
+		
+		for ( int i = 0; i <= 7; i++ )
+		{
+			bool hasInSlot = CPlayer.HasWeaponsInSlot(i+1);
+			int textColor = Font.FindFontColor("MetaHudDark");
+			if ( i == slot-1 )
+			{
+				textColor = Font.CR_UNTRANSLATED;
+			}
+			else if ( hasInSlot )
+			{
+				textColor = Font.FindFontColor("MetaHudGray");
+			}
+			DrawString(mIndexFont, ""..(i+1), (x+slotX, y+1), DI_TEXT_ALIGN_LEFT|DI_NOSHADOW, textColor);
+			slotX += 6;
+		}
+	}
+	
+	void DrawReserve (int x, int y)
+	{
+		/*if (screenblocks < 11 || automapactive)
+		{
+			DrawImage("HUDAMMO", (225, 170), DI_ITEM_OFFSETS);
+		} else {
+			DrawImage("HUDAMMO2", (225, 170), DI_ITEM_OFFSETS);
+		}*/
+		//DrawImage("HUDAMMO", (225, 170), DI_ITEM_OFFSETS);
+		DrawString(mIndexFont, FormatNumber(GetAmount("Clip"), 3), (x+20, y+21), DI_TEXT_ALIGN_RIGHT);
+		DrawString(mIndexFont, FormatNumber(GetAmount("Shell"), 3), (x+41, y+21), DI_TEXT_ALIGN_RIGHT);
+		DrawString(mIndexFont, FormatNumber(GetAmount("RocketAmmo"), 3), (x+62, y+21), DI_TEXT_ALIGN_RIGHT);
+		DrawString(mIndexFont, FormatNumber(GetAmount("Cell"), 3), (x+83, y+21), DI_TEXT_ALIGN_RIGHT);
+		
+		DrawString(mIndexFont, FormatNumber(GetAmount("SoulAmmo"), 3), (x+104, y+11), DI_TEXT_ALIGN_RIGHT);
+		DrawString(mIndexFont, FormatNumber(GetAmount("BFGAmmo"), 3), (x+104, y+2), DI_TEXT_ALIGN_RIGHT);
+	}
+	
+	void DrawStats()
+	{
+		if (screenblocks < 11 || automapactive)
+		{
+			DrawImage("HUDSTAT", (94, 169), DI_ITEM_OFFSETS);
+		} else {
+			DrawImage("HUDSTAT2", (94, 169), DI_ITEM_OFFSETS);
+		}
+		
+		DrawString(mIndexFont, FormatNumber(level.killed_monsters, 3), (119, 171), DI_TEXT_ALIGN_RIGHT);
+		DrawString(mIndexFont, FormatNumber(level.total_monsters, 3), (138, 171), DI_TEXT_ALIGN_RIGHT);
+		
+		DrawString(mIndexFont, FormatNumber(level.found_items, 3), (119, 181), DI_TEXT_ALIGN_RIGHT);
+		DrawString(mIndexFont, FormatNumber(level.total_items, 3), (138, 181), DI_TEXT_ALIGN_RIGHT);
+		
+		DrawString(mIndexFont, FormatNumber(level.found_secrets, 3), (119, 191), DI_TEXT_ALIGN_RIGHT);
+		DrawString(mIndexFont, FormatNumber(level.total_secrets, 3), (138, 191), DI_TEXT_ALIGN_RIGHT);
+	}
+	
+	void DrawFaceBox()
+	{
+		DrawImage("graphics/hud_v2/hud_facebg.png", (144, 170), DI_ITEM_OFFSETS);
+		
+		string faceTex = "";
+		int flags = MugShot.ANIMATEDGODMODE|Mugshot.XDEATHFACE;
+		switch ( CPlayer.GetGender() )
+		{
+			case GENDER_FEMALE:
+				faceTex = "SFF";
+				flags = flags|MugShot.CUSTOM;
+				break;
+			case GENDER_NEUTRAL:
+			case GENDER_OTHER:
+				faceTex = "STC";
+				flags = flags|MugShot.CUSTOM;
+				break;
+		}
+		
+		DrawTexture(GetMugShot(5, flags, faceTex), (143, 167), DI_ITEM_OFFSETS);
+	}
+	
+	void DrawItemBox (int x, int y)
+	{
+		// Handle drawing inventory items and the cooldown timer.
+		if (CPlayer.mo.InvSel != null && !level.NoInventoryBar)
+		{
+			static const string invItem[] =
+			{
+				"HandGrenade",
+				"DogCollar",
+				"Hologram",
+				"KineticMine",
+				"ShieldWall",
+				"SiphonGrenade",
+				"TeslaRocket",
+				"Artifact",
+				"FlameBelch"
+			};
+
+			static const string invCooldownCounter[] =
+			{
+				"InventoryFuel_HandGrenade",
+				"InventoryFuel_DogCollar",
+				"InventoryFuel_Hologram",
+				"InventoryFuel_KineticMine",
+				"InventoryFuel_ShieldWall",
+				"InventoryFuel_SiphonGrenade",
+				"InventoryFuel_TeslaRocket",
+				"InventoryFuel_TheArtifact",
+				"InventoryFuel_FlameBelch"
+			};
+
+			static const int invCooldownCap[] =
+			{
+				INV_COOLDOWN_GENERIC,
+				INV_COOLDOWN_GENERIC,
+				INV_COOLDOWN_HOLOGRAM,
+				INV_COOLDOWN_GENERIC,
+				INV_COOLDOWN_SHIELD,
+				INV_COOLDOWN_SIPHON,
+				INV_COOLDOWN_SIPHON,
+				INV_COOLDOWN_ARTIFACT,
+				INV_COOLDOWN_GENERIC
+			};
+			
+			for(int i = 0; i < invItem.size(); i++)
+			{
+				// Draw the cooldown timers for the selected item.
+				if ( !(CPlayer.mo.InvSel is invItem[i]) ) continue;
+				
+				//DrawBar("COOLBAR1", "COOLBAR0", GetAmount(invCooldownCounter[i]),
+				//invCooldownCap[i], (185, 169), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+				bool isFull = GetAmount(invCooldownCounter[i]) == invCooldownCap[i];
+				DrawBar("graphics/hud_v2/bar_inv.png", "graphics/hud_v2/bar_vert.png", isFull ? invCooldownCap[i] : GetAmount(invCooldownCounter[i]), invCooldownCap[i], (x+34, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+				
+				DrawInventoryIcon(CPlayer.mo.InvSel, (x+19, y+14), DI_ITEM_CENTER, isFull ? 1.0 : 0.5);
+				
+				// Render the icon half-transparent (greyed out) if we're still
+				// under cooldown and unable to spam Cyberdemons to death with
+				// Siphon Grenades. Yeah, I know you.
+				/*if (CPlayer.mo.InvSel is invItem[i] && GetAmount(invCooldownCounter[i]) < invCooldownCap[i])
+				{
+					DrawInventoryIcon(CPlayer.mo.InvSel, (185, 168), DI_ITEM_OFFSETS, 0.5);
+				} else if (CPlayer.mo.InvSel is invItem[i] && GetAmount(invCooldownCounter[i]) >= invCooldownCap[i]){
+					DrawInventoryIcon(CPlayer.mo.InvSel, (185, 168), DI_ITEM_OFFSETS);
+				} else {
+					// original inventory item handling, for demon key cheat and non-metadoom inventory items
+					DrawInventoryIcon(CPlayer.mo.InvSel, (185, 168), DI_ITEM_OFFSETS);
+					if (CPlayer.mo.InvSel.Amount > 1)
+					{
+						DrawString(mAmountFont, FormatNumber(CPlayer.mo.InvSel.Amount), (219, 199-mIndexFont.mFont.GetHeight()), DI_TEXT_ALIGN_RIGHT, Font.CR_GOLD);
+					}
+				}*/
+			}
+		}
+		
+		/*if (isInventoryBarVisible())
+		{
+			DrawInventoryBar(diparms, (48, 168), 7, DI_ITEM_LEFT_TOP|DI_DRAWCURSORFIRST);
+		}*/
+	}
+	
+	// This is redefined with some minor tweaks to a single line I'll mark down below
+	// so as to better position the inventory cursor. Wasteful, huh.
+	void DrawInventoryBar(InventoryBarState parms, Vector2 position, int numfields, int flags = 0, double bgalpha = 1.)
+	{
+		double width = parms.boxsize.X * numfields;
+		[position, flags] = AdjustPosition(position, flags, width, parms.boxsize.Y);
+		
+		CPlayer.mo.InvFirst = ValidateInvFirst(numfields);
+		if (CPlayer.mo.InvFirst == null) return;	// Player has no listed inventory items.
+		
+		Vector2 boxsize = parms.boxsize;
+		// First draw all the boxes
+		for(int i = 0; i < numfields; i++)
+		{
+			DrawTexture(parms.box, position + (boxsize.X * i, 0), flags | DI_ITEM_LEFT_TOP, bgalpha);
+		}
+		
+		// now the items and the rest
+		
+		Vector2 itempos = position + boxsize / 2;
+		Vector2 textpos = position + boxsize - (1, 1 + parms.amountfont.mFont.GetHeight());
+
+		int i = 0;
+		Inventory item;
+		for(item = CPlayer.mo.InvFirst; item != NULL && i < numfields; item = item.NextInv())
+		{
+			for(int j = 0; j < 2; j++)
+			{
+				if (j ^ !!(flags & DI_DRAWCURSORFIRST))
+				{
+					if (item == CPlayer.mo.InvSel)
+					{
+						double flashAlpha = bgalpha;
+						if (flags & DI_ARTIFLASH) flashAlpha *= itemflashFade;
+						// This is the one line I changed. Cool.
+						DrawTexture(parms.selector, position + parms.selectofs + (boxsize.X * i, 2), flags | DI_ITEM_LEFT_TOP, flashAlpha);
+					}
+				}
+				else
+				{
+					DrawInventoryIcon(item, itempos + (boxsize.X * i, 0), flags | DI_ITEM_CENTER );
+				}
+			}
+			
+			if (parms.amountfont != null && (item.Amount > 1 || (flags & DI_ALWAYSSHOWCOUNTERS)))
+			{
+				DrawString(parms.amountfont, FormatNumber(item.Amount, 0, 5), textpos + (boxsize.X * i, 0), flags | DI_TEXT_ALIGN_RIGHT, parms.cr, parms.itemalpha);
+			}
+			i++;
+		}
+		// Is there something to the left?
+		if (CPlayer.mo.FirstInv() != CPlayer.mo.InvFirst)
+		{
+			DrawTexture(parms.left, position + (-parms.arrowoffset.X, parms.arrowoffset.Y), flags | DI_ITEM_RIGHT|DI_ITEM_VCENTER);
+		}
+		// Is there something to the right?
+		if (item != NULL)
+		{
+			DrawTexture(parms.right, position + parms.arrowoffset + (width, 0), flags | DI_ITEM_LEFT|DI_ITEM_VCENTER);
+		}
+	}
+	
+	// THIS IS ALL A NIGHTMARE. I HAVE NO IDEA WHAT ANY OF THIS DOES. IF YOU
+	// WANT TO KNOW WHAT ANY OF THIS IS, ASK THEZOMBIEKILLER AND/OR DRPYSPY.
+	void DrawPowerupBars()
+	{
+		if(!CPlayer.mo) return;
+
+		int iterator   = 0;
+		int totalWidth = 0;
+
+		let barTexture = TexMan.CheckForTexture("POWRBAR", TexMan.Type_Any);
+		int barWidth, barHeight; [barWidth, barHeight] = TexMan.GetSize(barTexture);
+
+		for(int i = 0; i < barArraySize; i++)
+		{
+			string powerupClass = powerupStuff[barArrayColumns * i + 0];
+
+			int timeLeft, duration;
+			[timeLeft, duration] = CPlayer.mo.GetEffectTicsForItem(powerupClass);
+
+			if(duration <= -1) continue;
+
+			string powerupImage = powerupStuff[barArrayColumns * i + 1];
+			let powerupTexture  = TexMan.CheckForTexture(powerupImage, TexMan.Type_Any);
+
+			int width, height; [width, height] = TexMan.GetSize(powerupTexture);
+
+			totalWidth += width + barWidth;
+		}
+
+		for(int i = 0; i < barArraySize; i++)
+		{
+			string powerupClass = powerupStuff[barArrayColumns * i + 0];
+
+			int timeLeft, duration;
+			[timeLeft, duration] = CPlayer.mo.GetEffectTicsForItem(powerupClass);
+
+			if(duration <= -1) continue;
+
+			string powerupImage = powerupStuff[barArrayColumns * i + 1];
+			let powerupTexture  = TexMan.CheckForTexture(powerupImage, TexMan.Type_Any);
+
+			int width, height; [width, height] = TexMan.GetSize(powerupTexture);
+
+			int distance = 5;
+			let origin   = (160 - totalWidth / 2, 0);
+			let pos      = origin + ((barWidth + width + distance) * iterator, 165);
+			int flags    = /*DI_SCREEN_HCENTER |*/ DI_ITEM_LEFT;
+
+			DrawImage(powerupImage, pos - (width + 1, 0), flags);
+			DrawImage("HUDBAR", pos, flags);
+			DrawBar("POWRBAR", "MTBAR", timeLeft, duration, pos + (1, -1), 0, SHADER_HORZ, flags);
+
+			iterator++;
+		}
+	}
+}	

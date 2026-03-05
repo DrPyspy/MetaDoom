@@ -34,3 +34,17 @@ MetaBlack
 Flat:
 	#000000
 }
+
+MetaHudDark
+{
+	#2F2F2F  #000000
+Flat:
+	#000000
+}
+
+MetaHudGray
+{
+	#2F2F2F  #999999
+Flat:
+	#000000
+}
