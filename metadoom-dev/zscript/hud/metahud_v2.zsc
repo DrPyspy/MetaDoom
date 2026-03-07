@@ -41,6 +41,8 @@ class MetaDoomStatusBar : BaseStatusBar
 	int barArrayColumns; //size of the array divided by the columns
 	
 	double lowHealthFade;
+	
+	int x_off;
 
 	override void Init()
 	{
@@ -70,6 +72,8 @@ class MetaDoomStatusBar : BaseStatusBar
 		mArmorInterpolator = DynamicValueInterpolator.Create(0, 0.25, 1, 32);
 		mScoreInterpolator = DynamicValueInterpolator.Create(0, 0.25, 1, 64000);
 		mAmmoInterpolator = DynamicValueInterpolator.Create(0, 0.25, 1, 32);
+		
+		x_off = 53;
 	}
 
 	// What happens when a new game begins
@@ -133,7 +137,6 @@ class MetaDoomStatusBar : BaseStatusBar
 				DTA_DestWidth, Screen.GetWidth(), DTA_DestHeight, Screen.GetHeight());
 		}
 		
-		int x_off = 53;
 		int y = 170;
 		
 		let tex = TexMan.CheckForTexture("graphics/hud_v2/hud_main.png");
@@ -214,6 +217,18 @@ class MetaDoomStatusBar : BaseStatusBar
 			DrawPowerupBars();
 		}
 	}*/
+	
+	override void DrawAutomapHUD(double ticFrac)
+	{
+		// game needs to be checked here, so that SBARINFO also gets the correct colors.
+		DrawString(mSmallFont, level.FormatMapName(0), (160, 200-32-8), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_CENTER);
+		
+		DrawString(mSmallFont, level.TimeFormatted(), ((320+x_off)-2, 2), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT);
+		
+		DrawString(mSmallFont, String.Format("Kills: %d/%d", level.killed_monsters, level.total_monsters), ((-x_off)+2, 2), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
+		DrawString(mSmallFont, String.Format("Items: %d/%d", level.found_items, level.total_items), ((-x_off)+2, 2+8), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
+		DrawString(mSmallFont, String.Format("Secrets: %d/%d", level.found_secrets, level.total_secrets), ((-x_off)+2, 2+16), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
+	}
 
 	// Extremely cut down version of the HUD for weirdo althud-havers
 	protected void DrawAltBar (double TicFrac)
