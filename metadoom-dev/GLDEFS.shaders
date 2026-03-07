@@ -1,0 +1,4 @@
+hardwareshader texture "graphics/hud_v2/hurtpulse.png"
+{
+	Shader "shaders/metadoom/ui_hurtpulse.fp"
+}

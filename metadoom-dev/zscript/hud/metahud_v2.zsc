@@ -40,6 +40,7 @@ class MetaDoomStatusBar : BaseStatusBar
 	int barArraySize; //amount of 'columns' that the array has
 	int barArrayColumns; //size of the array divided by the columns
 	
+	double lowHealthFade;
 
 	override void Init()
 	{
@@ -99,6 +100,18 @@ class MetaDoomStatusBar : BaseStatusBar
 		int ammocount1, ammocount2;
 		[ammo1, ammo2, ammocount1, ammocount2] = GetCurrentAmmo();
 		mAmmoInterpolator.Update(ammocount1);
+		
+		if ( CPlayer.health <= 25 )
+		{
+			lowHealthFade = 1.0;
+		}
+		else
+		{
+			if ( lowHealthFade > 0.0 )
+			{
+				lowHealthFade -= 0.1;
+			}
+		}
 	}
 
 	override void Draw (int state, double TicFrac)
@@ -111,6 +124,14 @@ class MetaDoomStatusBar : BaseStatusBar
 		}
 		
 		BeginStatusBar();
+		
+		if ( lowHealthFade > 0.0 )
+		{
+			let tex_pulse = TexMan.CheckForTexture("graphics/hud_v2/hurtpulse.png");
+			screen.DrawTexture(tex_pulse, false, 0, 0,
+				DTA_Alpha, lowHealthFade,
+				DTA_DestWidth, Screen.GetWidth(), DTA_DestHeight, Screen.GetHeight());
+		}
 		
 		int x_off = 53;
 		int y = 170;
@@ -223,8 +244,16 @@ class MetaDoomStatusBar : BaseStatusBar
 		DrawString(mSmallFont2, ""..CPlayer.health, (124, 190), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_WHITE);
 		DrawString(mSmallFont2, ""..GetArmorAmount(), (194, 190), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
 		/*DrawImage("HUDBAR", (36, 189), DI_ITEM_OFFSETS);*/
-		DrawBar("graphics/hud_v2/bar_health.png", "graphics/hud_v2/bar_vert.png", mHealthInterpolator.GetValue(), CPlayer.mo.GetMaxHealth(false), (137, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
-		DrawBar("graphics/hud_v2/bar_armor.png", "graphics/hud_v2/bar_vert.png", mArmorInterpolator.GetValue(), 100, (178, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		DrawBar("graphics/hud_v2/bar_lifebar.png", "", mHealthInterpolator.GetValue(), CPlayer.mo.GetMaxHealth(false), (137, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		if ( mHealthInterpolator.GetValue() > 100 )
+		{
+			DrawBar("graphics/hud_v2/bar_lifebar2.png", "", mHealthInterpolator.GetValue()-100, CPlayer.mo.GetMaxHealth(true), (137, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		}
+		DrawBar("graphics/hud_v2/bar_armorbar.png", "", mArmorInterpolator.GetValue(), 100, (178, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		if ( mArmorInterpolator.GetValue() > 100 )
+		{
+			DrawBar("graphics/hud_v2/bar_armorbar2.png", "", mArmorInterpolator.GetValue()-100, 100, (178, 172), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		}
 		/*if (mHealthInterpolator.GetValue() > 100)
 		{
 			DrawBar("LIFEBAR2", "MTBAR3", mHealthInterpolator.GetValue() - 100, CPlayer.mo.GetMaxHealth(true),
@@ -345,6 +374,7 @@ class MetaDoomStatusBar : BaseStatusBar
 			} else {
 				DrawString(mSmallFont2, "---", (295, 180), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, Font.CR_WHITE);
 			}*/
+		DrawBar("graphics/hud_v2/bar_ammobar.png", "graphics/hud_v2/bar_horzbg.png", mAmmoInterpolator.GetValue(), ammomax, (x+36, y+9), 0, SHADER_REVERSE, DI_ITEM_OFFSETS);
 		
 		int slotX = 85-(6*8);
 		int slotY = 0;
@@ -483,7 +513,7 @@ class MetaDoomStatusBar : BaseStatusBar
 				//DrawBar("COOLBAR1", "COOLBAR0", GetAmount(invCooldownCounter[i]),
 				//invCooldownCap[i], (185, 169), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
 				bool isFull = GetAmount(invCooldownCounter[i]) == invCooldownCap[i];
-				DrawBar("graphics/hud_v2/bar_inv.png", "graphics/hud_v2/bar_vert.png", isFull ? invCooldownCap[i] : GetAmount(invCooldownCounter[i]), invCooldownCap[i], (x+34, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+				DrawBar("graphics/hud_v2/bar_invbar.png", "graphics/hud_v2/bar_vert.png", isFull ? invCooldownCap[i] : GetAmount(invCooldownCounter[i]), invCooldownCap[i], (x+34, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
 				
 				DrawInventoryIcon(CPlayer.mo.InvSel, (x+19, y+14), DI_ITEM_CENTER, isFull ? 1.0 : 0.5);
 				
