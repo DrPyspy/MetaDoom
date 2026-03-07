@@ -9,6 +9,10 @@ addmenukey "$MNU_MDMELEE" metadoom_melee
 alias metadoom_melee "pukename MeleePunch"
 defaultbind F metadoom_melee
 
+addmenukey "supar wepon" metadoom_qs_super
+alias metadoom_qs_super "slot 8"
+defaultbind G metadoom_qs_super
+
 addmenukey "$MNU_MDCODEX" metadoom_codex
 alias metadoom_codex "openmenu metacodex_menu"
 defaultbind N metadoom_codex
