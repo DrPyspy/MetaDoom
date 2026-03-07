@@ -40,14 +40,14 @@ class MetaDoomPlayer : PlayerPawn
 		Player.DisplayName "Slayer";
 		Player.CrouchSprite "MPLC";
 		Player.StartItem "MetaPistol";
-		Player.WeaponSlot 1, "MetaPistol", "MetaBerserkFist", "MetaLastResortFist", "MetaCheatDetector";
-		Player.WeaponSlot 2, "MetaHolyWaterPistol", "MetaShotgun";
-		Player.WeaponSlot 3, "MetaFireExtinguisher", "MetaSuperShotgun";
+		Player.WeaponSlot 1, "MetaBerserkFist", "MetaLastResortFist", "MetaChainsaw", "MetaAxe", "MetaFireExtinguisher";
+		Player.WeaponSlot 2, "MetaPistol", "MetaHolyWaterPistol";
+		Player.WeaponSlot 3, "MetaShotgun", "MetaSuperShotgun";
 		Player.WeaponSlot 4, "MetaChaingun", "MetaMachineGun";
 		Player.WeaponSlot 5, "MetaGrenadeLauncher", "MetaRocketLauncher";
 		Player.WeaponSlot 6, "MetaGaussCannon", "MetaLightningGun", "MetaPlasmaRifle";
-		Player.WeaponSlot 7, "MetaBFG9000", "MetaUnmaker", "MetaSoulcube";
-		Player.WeaponSlot 8, "MetaChainsaw", "MetaAxe";
+		Player.WeaponSlot 8, "MetaBFG9000", "MetaUnmaker", "MetaSoulcube";
+		Player.WeaponSlot 9, "MetaCheatDetector";
 		
 		+NOSKIN
 		
@@ -634,16 +634,56 @@ class MetaDoomPlayer : PlayerPawn
 	override Weapon PickWeapon(int slot, bool checkammo)
 	{
 		int i, j;
+		
+		bool found;
+		int find_slot, find_index;
+		
+		int new_index;
 
 		let player = self.player;
 		int Size = player.weapons.SlotSize(slot);
+		
 		// Does this slot even have any weapons?
+		
 		if (Size == 0)
 		{
 			return player.ReadyWeapon;
 		}
+		
 		let ReadyWeapon = player.ReadyWeapon;
-		if (ReadyWeapon != null)
+		
+		// [Py] Is this the same slot as the pending weapon?
+		
+		/*
+		if ( player.PendingWeapon != null && player.PendingWeapon != ReadyWeapon )
+		{
+			[found, find_slot, find_index] = player.weapons.LocateWeapon(player.PendingWeapon.GetClass());
+			
+			if ( found && find_slot == slot )
+			{
+				Console.Printf("Iterate within current slot");
+				new_index = find_index;
+				for ( i = 0; i < Size; i-- )
+				{
+					find_index -= 1;
+					if ( find_index < 0 )
+					{
+						find_index = Size-1;
+					}
+					let weapontype = player.weapons.GetWeapon(slot, find_index);
+					if ( !weapontype ) continue;
+					
+					let weap = Weapon(player.mo.FindInventory(weapontype));
+					if ( !weap ) continue;
+					weaponSave[slot] = weap;
+					Console.Printf("We got fuckin uhhhh "..weap.GetClassName());
+					return weap;
+				}
+			}
+		}
+		*/
+		
+		if ( ReadyWeapon != null )
 		{
 			if ( weaponSave[slot] == null ) // [Py] no wep slot saved
 			{
@@ -655,19 +695,23 @@ class MetaDoomPlayer : PlayerPawn
 					let weap = Weapon(player.mo.FindInventory(weapontype));
 					if ( !weap ) continue;
 					weaponSave[slot] = weap;
+					//Console.Printf(""..weap.GetClassName());
 					return weap;
 				}
 			}
 			else if ( weaponSave[slot] == ReadyWeapon )
 			{
 				MetaWeap_SwapWeaponClass(1);
+				//Console.Printf("Swapped to "..weaponSave[slot].GetClassName());
 				return weaponSave[slot];
 			}
 			else
 			{
+				//Console.Printf(""..weaponSave[slot].GetClassName());
 				return weaponSave[slot];
 			}
 		}
+		//Console.Printf("Defaulting to "..ReadyWeapon.GetClassName());
 		return ReadyWeapon;
 	}
 	
@@ -681,19 +725,26 @@ class MetaDoomPlayer : PlayerPawn
 		[found, slot, index] = player.weapons.LocateWeapon(player.ReadyWeapon.GetClass());
 		
 		int nextIndex = index+1;
-		if ( nextIndex >= player.weapons.SlotSize(slot) )
+		while ( nextIndex != index )
 		{
-			nextIndex = 0;
-		}
-		let weapontype = player.weapons.GetWeapon(slot, nextIndex);
-		if ( weapontype )
-		{
-			let weap = Weapon(player.mo.FindInventory(weapontype));
-			if ( weap )
+			if ( nextIndex >= player.weapons.SlotSize(slot) )
 			{
-				weaponSave[slot] = weap;
-				player.PendingWeapon = weap;
+				nextIndex = 0;
 			}
+			
+			let weapontype = player.weapons.GetWeapon(slot, nextIndex);
+			if ( weapontype )
+			{
+				let weap = Weapon(player.mo.FindInventory(weapontype));
+				if ( weap )
+				{
+					weaponSave[slot] = weap;
+					player.PendingWeapon = weap;
+					break;
+				}
+			}
+			
+			nextIndex++;
 		}
 	}
 }
