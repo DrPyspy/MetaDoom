@@ -535,6 +535,8 @@ Class MetaGrenadeLauncher_GasCloud : VisualThinker
 {
 	bool fadeOut;
 	double angler;
+	int rollDir;
+	double rollSpeed;
 	
 	override void PostBeginPlay()
 	{
@@ -545,6 +547,8 @@ Class MetaGrenadeLauncher_GasCloud : VisualThinker
 		alpha = 0.0;
 		vel = (cos(angler), sin(angler), frandom(-0.2,0.2)) * 8;
 		vel += (frandom(-0.25,0.25), frandom(-0.25,0.25), frandom(-0.25,0.25));
+		rollDir = random(0,1) ? 1 : -1;
+		rollSpeed = frandom(0,1);
 		
 		texture = TexMan.CheckForTexture("GBOCX0");
 	}
@@ -555,6 +559,9 @@ Class MetaGrenadeLauncher_GasCloud : VisualThinker
 			return;
 	
 		super.Tick();
+		
+		roll += rollSpeed*rollDir;
+		rollSpeed *= 0.99;
 		
 		if ( fadeOut )
 		{
