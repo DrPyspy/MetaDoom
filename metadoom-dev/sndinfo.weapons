@@ -75,6 +75,13 @@ weapons/waterpistol/empty		HWPMT
 weapons/waterpistol/flare		HWPFLAM
 weapons/waterpistol/ammo		HWPAMMO
 weapons/waterpistol/heal		HWPheal
+$random weapons/waterpistol/burn
+{
+	weapons/waterpistol/burn1 weapons/waterpistol/burn2 weapons/waterpistol/burn3
+}
+weapons/waterpistol/burn1 "sounds/weapons/holywaterpistol/hwp_burn1.ogg"
+weapons/waterpistol/burn2 "sounds/weapons/holywaterpistol/hwp_burn2.ogg"
+weapons/waterpistol/burn3 "sounds/weapons/holywaterpistol/hwp_burn3.ogg"
 
 // ssg
 weapons/ssg/get				ssgget
