@@ -43,6 +43,8 @@ class CheckSolidFooting : Actor
 	}
 }
 
+const HOLY_SCAREDTIME = 30;
+
 // The base monster actor, from which all monsters are inherited.
 	
 class MonsterCore : Actor
@@ -399,17 +401,9 @@ class MonsterCore : Actor
 	{
 		// Quick and dirty catch-all in case something that shouldn't be
 		// scareable somehow is.
-		if (CanBeScared == false)
+		if ( CanBeScared == false )
 		{
 			scurredamount = 0;
-			scurredtimer = 0;
-		}
-		
-		if (scurredtimer > 2)
-		{
-			scurredamount--;
-			scurredtimer = 0;
-			//A_SpawnItem("HolySweat",0,height-2);
 		}
 		
 		// If you're no longer scared, you probably shouldn't be scared. If
@@ -418,7 +412,7 @@ class MonsterCore : Actor
 		{
 			bFRIGHTENED = true;
 			double angle = random(0,360);
-			if ( level.maptime % 2 == 0 )
+			if ( level.maptime % 3 == 0 )
 			{
 				let p = MetaHolyWaterPistol_Sweat(Level.SpawnVisualThinker("MetaHolyWaterPistol_Sweat"));
 				if ( p )
@@ -439,6 +433,12 @@ class MonsterCore : Actor
 		else
 		{
 			bFRIGHTENED = false;
+		}
+		
+		if ( scurredamount > 0 )
+		{
+			scurredamount--;
+			//A_SpawnItem("HolySweat",0,height-2);
 		}
 	}
 	
@@ -470,8 +470,7 @@ class MonsterCore : Actor
 	{
 		if ( mod == 'HolyWater' && CanBeScared )
 		{
-			scurredamount = 7;
-			scurredtimer = 0;
+			scurredamount = HOLY_SCAREDTIME;
 		}
 		
 		// When damaged by the Axe, note down the inflictor as the cause of the bleeding damage
