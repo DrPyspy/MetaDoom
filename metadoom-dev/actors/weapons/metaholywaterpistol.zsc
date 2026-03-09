@@ -257,18 +257,20 @@ Class MetaHolyWaterPistol_Sweat : VisualThinker
 			return;
 		}
 		
-		SetRenderStyle(STYLE_Translucent);
+		SetRenderStyle(STYLE_Add);
 		alpha = 0.0;
-		scale = (0.25,0.25)*frandom(0.98,1.02);
+		scale = (0.225,0.225)*frandom(0.98,1.02);
 		//vel = (frandom(-0.1,0.1), frandom(-0.1,0.1), -1);
-		flags = SPF_FULLBRIGHT;
 		
-		texture = TexMan.CheckForTexture("HWPWA0");
+		texture = TexMan.CheckForTexture("HWPFA0");
 		fallSpeed = -1;
 		
 		pos.x = target.pos.x + offset.x;
 		pos.y = target.pos.y + offset.y;
 		pos.z = target.pos.z + offset.z;
+		
+		bADDLIGHTLEVEL = true;
+		LightLevel = 64;
 	}
 	
 	int timer;
@@ -291,8 +293,13 @@ Class MetaHolyWaterPistol_Sweat : VisualThinker
 			scale.y += 0.01;
 			if ( alpha < 1.0 )
 			{
-				alpha += 0.25;
+				alpha += 0.15;
+				if ( alpha >= 1.0 )
+				{
+					alpha = 1.0;
+				}
 			}
+			fallSpeed *= 0.98;
 		}
 		else
 		{
