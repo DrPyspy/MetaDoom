@@ -94,6 +94,7 @@ class MetaHolyWaterPistol : MetaDoomWeapon
 		HWPH A 0 A_JumpIfNoAmmo("NoAmmo");
 		HWPH A 0 
 		{
+			A_Overlay(14, "Overlay.Recoil");
 			A_PlaySound("weapons/waterpistol/fire", CHAN_WEAPON);
 			
 			if (CountInv("PowerMetaDamage") > 0)
@@ -101,10 +102,10 @@ class MetaHolyWaterPistol : MetaDoomWeapon
 				A_PlaySound("powerups/quad/use", CHAN_5);
 			}
 		}
-		HWPH A 1 A_FireProjectile ("HolyWaterShot", random(-4,4), 1, 0, 5, FPF_NOAUTOAIM, random(-4,4));
-		HWPH AAAAAAAAAA 1 A_FireProjectile ("HolyWaterShot", random(-4,4), 0, 0, 5, FPF_NOAUTOAIM, random(-4,4));
-		HWPH BBBBBBBBBB 1 A_FireProjectile ("HolyWaterShot", random(-4,4), 0, 0, 5, FPF_NOAUTOAIM, random(-4,4));
-		HWPH B 4;
+		HWPH A 1 A_FireProjectile ("HolyWaterShot", frandom(-4,4), 1, 0, 5, FPF_NOAUTOAIM, -5+frandom(-4,4));
+		HWPH ABBBBBBBBB 1 A_FireProjectile ("HolyWaterShot", frandom(-4,4), 0, 0, 5, FPF_NOAUTOAIM, -5+frandom(-4,4));
+		HWPH BBBBAAAAAA 1 A_FireProjectile ("HolyWaterShot", frandom(-4,4), 0, 0, 5, FPF_NOAUTOAIM, -5+frandom(-4,4));
+		HWPH A 4;
 		HWPH A 5 ;
 		Goto Ready;
 	AltFire:
@@ -134,12 +135,48 @@ class MetaHolyWaterPistol : MetaDoomWeapon
 		TNT1 A 10;
 		goto Select;
 	NoAmmo:
-		HWPH A 4 A_PlaySound("weapons/waterpistol/empty", CHAN_WEAPON);
-		HWPH B 4;
+		HWPH A 4
+		{
+			A_PlaySound("weapons/waterpistol/empty", CHAN_WEAPON);
+			A_Overlay(14, "Overlay.RecoilEmpty");
+		}
+		HWPH A 4;
 		HWPH A 4;
 		goto Ready;
  	Spawn:
 		HWPP Z -1;
+		Stop;
+	Overlay.Recoil:
+		TNT1 A 1 A_WeaponOffset(0, 1, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 2, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 3, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 4, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 3, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 2, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 1, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(GetShake(), 0.5, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(GetShake(), 0.25, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(GetShake(), 0.125, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(GetShake(), 0.125, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 0.125, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 0.125, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 0.125, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 0.125, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 0.125, WOF_ADD|WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 38, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 35, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 34, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 33, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 32.5, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 32.25, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 32, WOF_INTERPOLATE);
+		Stop;
+	Overlay.RecoilEmpty:
+		TNT1 A 1 A_WeaponOffset(0, 33, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(GetShake(), 34, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(GetShake(), 35, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 34, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(0, 32, WOF_INTERPOLATE);
 		Stop;
 	}
 }
