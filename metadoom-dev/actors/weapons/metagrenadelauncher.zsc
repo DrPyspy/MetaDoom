@@ -548,7 +548,7 @@ Class MetaGrenadeLauncher_GasCloud : VisualThinker
 		vel = (cos(angler), sin(angler), frandom(-0.2,0.2)) * 8;
 		vel += (frandom(-0.25,0.25), frandom(-0.25,0.25), frandom(-0.25,0.25));
 		rollDir = random(0,1) ? 1 : -1;
-		rollSpeed = frandom(0,1);
+		rollSpeed = frandom(0.25,1);
 		LightLevel = 64;
 		bADDLIGHTLEVEL = true;
 		
@@ -580,9 +580,9 @@ Class MetaGrenadeLauncher_GasCloud : VisualThinker
 		else
 		{
 			alpha += 0.1;
-			if ( alpha >= 1.0 )
+			if ( alpha >= 0.75 )
 			{
-				alpha = 1.0;
+				alpha = 0.75;
 				fadeOut = true;
 			}
 			vel.z *= 0.93;
