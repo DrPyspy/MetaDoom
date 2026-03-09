@@ -78,6 +78,9 @@ class MetaDoomPlayer : PlayerPawn
 	Meta_RecoilInfo recoil_info;
 	int recoil_tics;
 	
+	double bob_amount;
+	double bob_amountPrev;
+	
 	States
 	{
 	Spawn:
@@ -439,6 +442,16 @@ class MetaDoomPlayer : PlayerPawn
 		}
 		
 		Super.Tick();
+		
+		bob_amountPrev = bob_amount;
+		if ( player.WeaponState & WF_WEAPONBOBBING )
+		{
+			bob_amount = lerp(bob_amount, 1.0, 0.05);
+		}
+		else
+		{
+			bob_amount = lerp(bob_amount, 0.0, 0.2);
+		}
 	}
 	
 	// Break any monster grappling hooks on teleport
@@ -575,6 +588,116 @@ class MetaDoomPlayer : PlayerPawn
 
 	// Footsteps Code
 	Footsteps fsteps;
+	
+	static double lerp (double start, double end, double time)
+	{
+		return start + (end - start) * time;
+	}
+	
+	override Vector2 BobWeapon (double ticfrac)
+	{
+		Vector2 p1, p2, r;
+		Vector2 result;
+
+		let player = self.player;
+		if (!player) return (0, 0);
+		let weapon = player.ReadyWeapon;
+
+		if (weapon == null || weapon.bDontBob || player.GetWBobSpeed() == 0)
+		{
+			return (0, 0);
+		}
+
+		// [XA] Get the current weapon's bob properties.
+		int bobstyle = weapon.BobStyle;
+		double BobSpeed = (weapon.BobSpeed * 128);
+		double Rangex = weapon.BobRangeX;
+		double Rangey = weapon.BobRangeY;
+
+		for (int i = 0; i < 2; i++)
+		{
+			// Bob the weapon based on movement speed. ([SP] And user's bob speed setting)
+			double angle = (BobSpeed * player.GetWBobSpeed() * 35 /	TICRATE*(Level.maptime - 1 + i)) * (360. / 8192.);
+
+			// [RH] Smooth transitions between bobbing and not-bobbing frames.
+			// This also fixes the bug where you can "stick" a weapon off-center by
+			// shooting it when it's at the peak of its swing.
+			if (curbob != player.bob)
+			{
+				if (abs(player.bob - curbob) <= 1)
+				{
+					curbob = player.bob;
+				}
+				else
+				{
+					double zoom = MAX(1., abs(curbob - player.bob) / 40);
+					if (curbob > player.bob)
+					{
+						curbob -= zoom;
+					}
+					else
+					{
+						curbob += zoom;
+					}
+				}
+			}
+
+			if (curbob != 0)
+			{
+				double bobVal = player.bob;
+				if (i == 0)
+				{
+					bobVal = prevBob;
+				}
+				//[SP] Added in decorate player.viewbob checks
+				
+				double bob_intensity = lerp(bob_amountPrev, bob_amount, ticfrac);
+				
+				double bobx = (bobVal * bob_intensity * Rangex * ViewBob);
+				double boby = (bobVal * bob_intensity * Rangey * ViewBob);
+				switch (bobstyle)
+				{
+				case Bob_Normal:
+					r.X = bobx * cos(angle);
+					r.Y = boby * abs(sin(angle));
+					break;
+
+				case Bob_Inverse:
+					r.X = bobx*cos(angle);
+					r.Y = boby * (1. - abs(sin(angle)));
+					break;
+
+				case Bob_Alpha:
+					r.X = bobx * sin(angle);
+					r.Y = boby * abs(sin(angle));
+					break;
+
+				case Bob_InverseAlpha:
+					r.X = bobx * sin(angle);
+					r.Y = boby * (1. - abs(sin(angle)));
+					break;
+
+				case Bob_Smooth:
+					r.X = bobx*cos(angle);
+					r.Y = 0.5f * (boby * (1. - (cos(angle * 2))));
+					break;
+
+				case Bob_InverseSmooth:
+					r.X = bobx*cos(angle);
+					r.Y = 0.5f * (boby * (1. + (cos(angle * 2))));
+				}
+			}
+			else
+			{
+				r = (0, 0);
+			}
+			if (i == 0) p1 = r; else p2 = r;
+		}
+		
+		Vector2 output = p1 * (1. - ticfrac) + p2 * ticfrac;
+		
+		return output;
+	}
 	
 	// [Py] Also recoil shite
 	double EaseInOutSine (double input)
