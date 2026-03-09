@@ -241,6 +241,78 @@ class HolyWaterFire : Actor
 	}
 }
 
+Class MetaHolyWaterPistol_Sweat : VisualThinker
+{
+	Vector3 offset;
+	Actor target;
+	double fallSpeed;
+	
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+			
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
+		
+		SetRenderStyle(STYLE_Translucent);
+		alpha = 0.0;
+		scale = (0.25,0.25)*frandom(0.98,1.02);
+		//vel = (frandom(-0.1,0.1), frandom(-0.1,0.1), -1);
+		flags = SPF_FULLBRIGHT;
+		
+		texture = TexMan.CheckForTexture("HWPWA0");
+		fallSpeed = -1;
+		
+		pos.x = target.pos.x + offset.x;
+		pos.y = target.pos.y + offset.y;
+		pos.z = target.pos.z + offset.z;
+	}
+	
+	int timer;
+	
+	override void Tick()
+	{
+		if ( bDESTROYED )
+			return;
+			
+		if ( !target )
+		{
+			Destroy();
+			return;
+		}
+	
+		super.Tick();
+		
+		if ( timer < 12 )
+		{
+			scale.y += 0.01;
+			if ( alpha < 1.0 )
+			{
+				alpha += 0.25;
+			}
+		}
+		else
+		{
+			if ( alpha <= 0.0 )
+			{
+				Destroy(); return;
+			}
+			
+			fallSpeed -= 0.5;
+			alpha -= 0.1;
+			scale.y += 0.05;
+		}
+		pos.x = target.pos.x + offset.x;
+		pos.y = target.pos.y + offset.y;
+		pos.z = target.pos.z + offset.z;
+		offset.z += fallSpeed;
+		timer++;
+	}
+}
+
 Class MetaHolyWaterPistol_BurnImpact : VisualThinker
 {
 	static const string frames[] =
@@ -276,6 +348,71 @@ Class MetaHolyWaterPistol_BurnImpact : VisualThinker
 	{
 		texture = TexMan.CheckForTexture(frames[frame]);
 		flags = frame <= 1 ? SPF_FULLBRIGHT : 0;
+	}
+	
+	override void Tick()
+	{
+		if ( bDESTROYED )
+			return;
+	
+		super.Tick();
+		
+		stagger += 1;
+		if ( stagger >= 5 )
+		{
+			stagger = 0;
+			frame += 1;
+			if ( frame >= frames.Size() )
+			{
+				Destroy();
+				return;
+			}
+			UpdateSprite();
+		}
+		
+		alpha -= 0.01;
+		
+		scale.x += 0.01;
+		scale.y += 0.01;
+		
+		vel.x *= 0.9;
+		vel.y *= 0.9;
+		vel.z += 0.1;
+	}
+}
+
+Class MetaHolyWaterPistol_BurnSmoke : VisualThinker
+{
+	static const string frames[] =
+	{
+		"graphics/fx/smoothpuff1.png",
+		"graphics/fx/smoothpuff2.png",
+		"graphics/fx/smoothpuff3.png",
+		"graphics/fx/smoothpuff4.png",
+		"graphics/fx/smoothpuff5.png"
+	};
+	
+	int stagger;
+	int frame;
+	
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+		//SetRenderStyle(STYLE_Translucent);
+		SetRenderStyle(STYLE_Translucent);
+		roll = random(0,3)*90;
+		alpha = 1.0;//+frandom(-0.05,0.05);
+		scale = (0.5,0.5);
+		//scolor = "#818181";
+		vel = (frandom(-0.25,0.25), frandom(-0.25,0.25), frandom(-0.25,0.25));
+		UpdateSprite();
+		
+		//texture = TexMan.CheckForTexture("graphics/fx/spark.png");
+	}
+	
+	void UpdateSprite()
+	{
+		texture = TexMan.CheckForTexture(frames[frame]);
 	}
 	
 	override void Tick()
