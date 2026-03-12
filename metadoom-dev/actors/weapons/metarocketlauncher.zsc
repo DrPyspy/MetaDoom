@@ -41,7 +41,6 @@ class MetaRocketLauncher : MetaDoomWeapon
 		+WEAPON.NOAUTOFIRE
 		Inventory.PickupMessage "$GOTLAUNCHER";
 		Tag "$TAG_ROCKETLAUNCHER";
-		Weapon.YAdjust 10;
 		Inventory.PickupSound "weapons/rocketlauncher/get";
 		scale 0.75;
 		+WEAPON.NOALERT
