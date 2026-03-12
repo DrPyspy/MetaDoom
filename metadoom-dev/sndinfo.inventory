@@ -9,6 +9,8 @@ Inventory Items
 // Sounds for Inventory Items
 inventory/throw				invtoss
 inventory/refresh			refresh
+inventory/swap "sounds/inventory/inv_swap.ogg"
+misc/invchange "sounds/inventory/inv_next.ogg"
 
 // Hand Grenade
 inventory/grenade/get		getgren

@@ -93,9 +93,9 @@ Class Meta_OmniEventHandler : EventHandler
 		
 		let player = players[e.Player];
 		
-		/*if ( cmds[1] ~== "nextweapclass" )
+		if ( cmds[1] ~== "swapinv" )
 		{
-			MetaDoomPlayer(player.mo).MetaWeap_SwapWeaponClass(1);
-		}*/
+			MetaDoomPlayer(player.mo).SwapInventory();
+		}
 	}
 }

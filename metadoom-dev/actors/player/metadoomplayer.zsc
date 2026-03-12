@@ -68,6 +68,7 @@ class MetaDoomPlayer : PlayerPawn
 	}
 	
 	Array<Weapon> weaponSave;
+	Inventory invSlot_backup;
 	
 	// This is a part of a gross hack to ensure that the player's angle isn't
 	// snapped around in a disorienting fashion if they get punched by another
@@ -80,6 +81,57 @@ class MetaDoomPlayer : PlayerPawn
 	
 	double bob_amount;
 	double bob_amountPrev;
+	
+	Inventory GetInvThatIsNotThis(Inventory no = null)
+	{
+		Inventory invbert = InvSel;
+		if ( InvSel == null ) return null;
+		
+		while ( true )
+		{
+			if ( InvSel.NextInv() != null )
+			{
+				invbert = InvSel.NextInv();
+			}
+			else
+			{
+				invbert = FirstInv();
+			}
+			
+			if ( invbert == InvSel ) return null;
+			
+			if ( invbert != no )
+			{
+				return invbert;
+			}
+		}
+		
+		return null;
+	}
+	
+	override void AddInventory (Inventory item)
+	{
+		Super.AddInventory(item);
+		
+		// [Py] fill alt slot if applicable
+		if ( ( InvSel != null && InvSel != item ) && invSlot_backup == null )
+		{
+			invSlot_backup = item;
+		}
+	}
+	
+	void SwapInventory()
+	{
+		if ( InvSel == null ) return;
+		
+		Inventory save = InvSel;
+		if ( !invSlot_backup ) invSlot_backup = GetInvThatIsNotThis(InvSel);
+		if ( !invSlot_backup ) return;
+		Console.Printf(""..invSlot_backup.GetClassName());
+		InvSel = invSlot_backup;
+		invSlot_backup = save;
+		A_StartSound("inventory/swap", 15);
+	}
 	
 	States
 	{

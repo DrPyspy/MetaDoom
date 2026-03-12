@@ -13,6 +13,10 @@ addmenukey "supar wepon" metadoom_qs_super
 alias metadoom_qs_super "slot 8"
 defaultbind G metadoom_qs_super
 
+addmenukey "inventory swap" metadoom_swapinv
+alias metadoom_swapinv "netevent metadoom:swapinv"
+defaultbind R metadoom_swapinv
+
 addmenukey "$MNU_MDCODEX" metadoom_codex
 alias metadoom_codex "openmenu metacodex_menu"
 defaultbind N metadoom_codex
