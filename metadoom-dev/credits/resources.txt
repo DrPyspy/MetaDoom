@@ -2,30 +2,34 @@
 	RESOURCES (WEAPONS)
 --------------------------------------------------------------------------------
 	
+	= Chainsaw =
+		Derived from the chainsaws from Doom 3 and Doom II RPG
+		Spriteset by DrPyspy
+	
 	= Axe =
 		Original spriteset by Neoworm
-		Edit by DrPyspy
+		Edits by DrPyspy
 	
 	= Pistol =
 		Derived from the pistols from Doom and Doom 2016
-		Edit by The Kins
+		Spriteset by The Kins
 	
 	= Super Shotgun =
 		Derived from the super shotgun from Doom II (+ id Vault assets)
-		Original edit by The Kins
+		Original edits by The Kins
 		Further edits by DrPyspy
 	
 	= Rocket Launcher =
 		Derived from the rocket launchers from Doom, Doom 64, and Doom 3
-		Edit by DrPyspy
+		Spriteset by DrPyspy
 	
 	= Grenade Launcher =
 		Derived from the grenade launcher from Doom 2016 (+ id Vault assets)
-		Edit by DrPyspy
+		Spriteset by DrPyspy
 	
 	= BFG 9000 =
 		Derived from the BFG 9000s(s) from Doom, Doom 64, and Doom 2016
-		Original edit by The Kins
+		Original edits by The Kins
 		Further edits by DrPyspy
 		
 --------------------------------------------------------------------------------
@@ -34,3 +38,15 @@
 	
 	= Flame Belch =
 		Original spriteset by Tesefy
+		
+--------------------------------------------------------------------------------
+	RESOURCES (ACTORS)
+--------------------------------------------------------------------------------
+	
+	= Maggot =
+		Derived from the Maggot from Doom 3
+		Spriteset by DrPyspy
+	
+	= Marauder =
+		Derived from the Maruader from Doom Eternal
+		Spriteset by DrPyspy
