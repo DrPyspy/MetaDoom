@@ -6,121 +6,192 @@ Spawners
 ----------------------------
 */
 
-class MetaSpawner : Actor
+Class MetaSpawnInfo
+{
+	Map<String, int> nearby;
+	Actor src;
+	
+	void SearchInRadius(int radius)
+	{
+		BlockThingsIterator it = BlockThingsIterator.Create(src, radius);
+		//Console.Printf("\ck-----");
+		while ( it.Next() )
+		{
+			Actor mo = it.thing;
+			
+			if ( mo.health <= 0 ) return;
+			
+			int val = nearby.Get(mo.GetClassName());
+			nearby.Insert(mo.GetClassName(), val+1);
+			//Console.Printf(""..mo.GetClassName());
+		}
+	}
+	
+	bool IsNearby (Class<Actor> thing)
+	{
+		return nearby.CheckKey(thing.GetClassName());
+	}
+}
+
+Class MetaSpawner : Actor
 {
 	Default
 	{
 		+ISMONSTER
 		-COUNTKILL
 	}
-}
-
-class ZombiemanSpawner : MetaSpawner // replaces ZombieMan
-{
-	States
+	
+	MetaDoom_GameBrain brain;
+	
+	MetaSpawnInfo GetNearbyInfo (int searchRadius)
 	{
-	Spawn:
-		POSS A 0;
-		TNT1 A 0 A_JumpIf(meta_noalts_actors, "Zombieman");
-		TNT1 A 0 A_JumpIf(meta_contentlocust, "ContentLocustVarietyPack");
-		TNT1 A 0 A_JumpIf(meta_episodicspawns && CallACS("Item_GameDetector", 0, 0, 0) >= 2, "EpisodicSelector");
-		goto Doom2Selector;
-	EpisodicSelector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 2, "Tier2");
-		goto Zombieman;
-	Doom2Selector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 5, "Tier2");
-		goto Zombieman;
-	ContentLocustVarietyPack:
-		TNT1 A 0;
-		TNT1 A 0 A_Jump(128, "HellRazer");
-		goto Zombieman;
-	Tier2:
-		TNT1 A 0;
-		TNT1 A 0 A_Jump(128, "HellRazer");
-		goto Zombieman;
-	Zombieman:
-		TNT1 A 0 A_SpawnItemEx("MetaZombieman",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL,0,tid);
-		stop;
-	HellRazer:
-		TNT1 A 0 A_SpawnItemEx("MetaHellRazer",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL,0,tid);
-		stop;
+		let spawninfo = new("MetaSpawnInfo");
+		spawninfo.src = self;
+		spawninfo.SearchInRadius(searchRadius);
+		return spawninfo;
+	}
+	
+	Actor SpawnVariant (Class<Actor> toSpawn)
+	{
+		let newFella = Spawn(toSpawn, pos);
+		if ( newFella )
+		{
+			newFella.SpawnAngle = SpawnAngle;
+			newFella.angle = angle;
+			newFella.pitch = pitch;
+			newFella.roll = roll;
+			newFella.SpawnPoint = SpawnPoint;
+			newFella.special = special;
+			for ( int i = 0; i < 5; i++ )
+			{
+				newFella.args[i] = args[i];
+			}
+			newFella.special1 = special1;
+			newFella.special2 = special2;
+			newFella.SpawnFlags = SpawnFlags & ~MTF_SECRET;
+			newFella.HandleSpawnFlags();
+			newFella.SpawnFlags = SpawnFlags;
+			newFella.bCountSecret = SpawnFlags & MTF_SECRET;
+			newFella.ChangeTid(tid);
+			newFella.vel = vel;
+			newFella.master = master;
+			newFella.target = target;
+			newFella.tracer = tracer;
+			newFella.CopyFriendliness(self, false);
+			if ( health != SpawnHealth() ) newFella.health = health;
+		}
+		
+		return newFella;
+	}
+	
+	Array< Class<Actor> > spawns_class;
+	Array<int> spawns_weight;
+	
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+		brain = MetaDoom_GameBrain.Get();
+		DoSpawn();
+		int totalWeight;
+		//Console.Printf("=========================");
+		for ( int i = 0; i < spawns_weight.Size(); i++ )
+		{
+			//Console.Printf("\t%s - %d", spawns_class[i].GetClassName(), spawns_weight[i]);
+			totalWeight += spawns_weight[i];
+		}
+		//Console.Printf("------");
+		int randomWeight = random(0,totalWeight);
+		for ( int i = 0; i < spawns_class.Size(); i++ )
+		{
+			if ( randomWeight < spawns_weight[i] )
+			{
+				let fella = SpawnVariant(spawns_class[i]);
+				AfterSpawn(MonsterCore(fella));
+				//Console.Printf("\tSpawned %s at %f %f %f", spawns_class[i].GetClassName(), fella.pos.x, fella.pos.y, fella.pos.z);
+				return;
+			}
+			randomWeight -= spawns_weight[i];
+		}
+	}
+	
+	virtual void AfterSpawn(MonsterCore fella)
+	{
+		Destroy();
+	}
+	
+	void AddSpawn(Class<Actor> toSpawn, int weight)
+	{
+		spawns_class.Push(toSpawn);
+		spawns_weight.Push(weight);
+	}
+	
+	virtual void DoSpawn()
+	{
 	}
 }
 
-class ShotgunGuySpawner : MetaSpawner // replaces ShotgunGuy
+Class ZombiemanSpawner : MetaSpawner // replaces ZombieMan
 {
-	States
+	override void DoSpawn()
 	{
-	Spawn:
-		SPOS A 0;
-		TNT1 A 0 A_JumpIf(meta_noalts_actors, "ShotgunGuy");
-		TNT1 A 0 A_JumpIf(meta_contentlocust, "ContentLocustVarietyPack");
-		TNT1 A 0 A_JumpIf(meta_episodicspawns && CallACS("Item_GameDetector", 0, 0, 0) >= 2, "EpisodicSelector");
-		goto Doom2Selector;
-	EpisodicSelector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 3, "Tier2");
-		goto ShotgunGuy;
-	Doom2Selector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 4, "Tier2");
-		goto ShotgunGuy;
-	ContentLocustVarietyPack:
-		TNT1 A 0;
-		TNT1 A 0 A_Jump(128, "ZSec");
-		goto ShotgunGuy;
-	Tier2:
-		TNT1 A 0;
-		TNT1 A 0 A_Jump(128, "ZSec");
-		goto ShotgunGuy;
-	ZSec:
-		TNT1 A 0 A_SpawnItemEx("MetaZSec",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL,0,tid);
-		stop;
-	ShotgunGuy:
-		TNT1 A 0 A_SpawnItemEx("MetaShotgunGuy",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL,0,tid);
-		stop;
+		if ( meta_contentlocust )
+		{
+			AddSpawn("MetaZombieman", 128);
+			AddSpawn("MetaHellRazer", 128);
+		}
+		
+		int maps = brain.GetMapsCleared();
+		
+		if ( brain.IsEpisodic() ? (maps >= 2) : (maps >= 5) )
+		{
+			AddSpawn("MetaHellRazer", 128);
+		}
+		AddSpawn("MetaZombieman", 128);
+	}
+}
+
+Class ShotgunGuySpawner : MetaSpawner // replaces ShotgunGuy
+{
+	override void DoSpawn()
+	{
+		if ( meta_contentlocust )
+		{
+			AddSpawn("MetaShotgunGuy", 128);
+			AddSpawn("MetaZSec", 128);
+		}
+		
+		int maps = brain.GetMapsCleared();
+		
+		if ( brain.IsEpisodic() ? (maps >= 3) : (maps >= 4) )
+		{
+			AddSpawn("MetaZSec", 128);
+		}
+		AddSpawn("MetaShotgunGuy", 128);
 	}
 }
 
 class ChaingunGuySpawner : MetaSpawner // replaces ChaingunGuy
 {	
-	States
+	override void DoSpawn()
 	{
-	Spawn:
-		CPOS A 0;
-		TNT1 A 0 A_JumpIf(meta_noalts_actors, "MachineGunGuy");
-		TNT1 A 0 A_JumpIf(meta_contentlocust, "ContentLocustVarietyPack");
-		TNT1 A 0 A_JumpIf(meta_episodicspawns && CallACS("Item_GameDetector", 0, 0, 0) >= 2, "EpisodicSelector");
-		goto Doom2Selector;
-	EpisodicSelector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 6, "Tier3");
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 2, "Tier2");
-		goto MachineGunGuy;
-	Doom2Selector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 13, "Tier3");
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 4, "Tier2");
-		goto MachineGunGuy;
-	ContentLocustVarietyPack:
-		TNT1 A 0;
-		TNT1 A 0 A_Jump(128, "ChainGunGuy", "AssassinGuy");
-		goto MachineGunGuy;
-	Tier2:
-		TNT1 A 0;
-		TNT1 A 0 A_Jump(128, "ChainGunGuy");
-		goto MachineGunGuy;
-	Tier3:
-		TNT1 A 0;
-		TNT1 A 0 A_Jump(64, "AssassinGuy");
-		TNT1 A 0 A_Jump(128, "ChainGunGuy");
-		goto MachineGunGuy;
-	MachineGunGuy:
-		TNT1 A 0 A_SpawnItemEx("MetaMachineGunGuy",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		stop;
-	ChainGunGuy:
-		TNT1 A 0 A_SpawnItemEx("MetaChainGunGuy",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		stop;
-	AssassinGuy:
-		TNT1 A 0 A_SpawnItemEx("MetaAssassinGuy",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		stop;
+		if ( meta_contentlocust )
+		{
+			AddSpawn("MetaAssassinGuy", 128);
+			AddSpawn("MetaChainGunGuy", 128);
+			AddSpawn("MetaMachineGunGuy", 128);
+		}
+		
+		int maps = brain.GetMapsCleared();
+		
+		if ( brain.IsEpisodic() ? (maps >= 6) : (maps >= 13) )
+		{
+			AddSpawn("MetaAssassinGuy", 64);
+		}
+		if ( brain.IsEpisodic() ? (maps >= 2) : (maps >= 4) )
+		{
+			AddSpawn("MetaChainGunGuy", 128);
+		}
+		AddSpawn("MetaMachineGunGuy", 128);
 	}
 }
 
@@ -216,9 +287,76 @@ class ImpSpawner : MetaSpawner // replaces DoomImp
 
 class PinkySpawner : MetaSpawner // replaces Demon
 {	
+	override void DoSpawn()
+	{
+		int maps = brain.GetMapsCleared();
+		let info = GetNearbyInfo(256);
+		
+		bool humanNear = ( info.IsNearby("ZombiemanSpawner")
+			|| info.IsNearby("MetaZombieman")
+			|| info.IsNearby("MetaHellRazer")
+			|| info.IsNearby("ShotgunGuySpawner")
+			|| info.IsNearby("MetaShotgunGuy")
+			|| info.IsNearby("MetaZSec")
+			|| info.IsNearby("ChaingunGuySpawner")
+			|| info.IsNearby("MetaMachineGunGuy")
+			|| info.IsNearby("MetaChainGunGuy")
+			|| info.IsNearby("MetaAssassinGuy")
+		);
+		
+		if ( maps >= 2 )
+		{
+			AddSpawn("MetaHellhound", humanNear ? 192 : 64);
+		}
+		if ( maps >= 4 )
+		{
+			AddSpawn("MetaDemonDog", humanNear ? 192 : 64);
+		}
+		if ( maps >= 8 )
+		{
+			AddSpawn("MetaCerberus", humanNear ? 192 : 64);
+		}
+		
+		// Add bulls...
+		if ( brain.IsEpisodic() ? (maps >= 7) : (maps >= 10) )
+		{
+			AddSpawn("MetaBullDemon", 72);
+		}
+		else if ( brain.IsEpisodic() ? (maps >= 4) : (maps >= 8) )
+		{
+			AddSpawn("MetaBullDemon", 64);
+		}
+		
+		// Add maggots...
+		// A little rare starting out, but creeps in more about 12 maps in
+		if ( brain.IsEpisodic() ? (maps >= 7) : (maps >= 12) )
+		{
+			if ( level.PointInSector(self.pos.xy).GetLightLevel() <= 128 )
+			{
+				AddSpawn("MetaMaggot", 256);
+			}
+			else
+			{
+				AddSpawn("MetaMaggot", info.IsNearby("MetaMaggot") ? 64 : 128);
+			}
+		}
+		else if ( brain.IsEpisodic() ? (maps >= 4) : (maps >= 6) )
+		{
+			if ( level.PointInSector(self.pos.xy).GetLightLevel() <= 128 )
+			{
+				AddSpawn("MetaMaggot", 192);
+			}
+			else
+			{
+				AddSpawn("MetaMaggot", info.IsNearby("MetaMaggot") ? 32 : 96);
+			}
+		}
+		
+		AddSpawn("MetaDemon", 128);
+	}
 	States
 	{
-	Spawn:
+	/*Spawn:
 		SARG A 0;
 		TNT1 A 0 A_JumpIf(meta_noalts_actors, "Pinky");
 		TNT1 A 0 A_JumpIf(meta_contentlocust, "ContentLocustVarietyPack");
@@ -323,7 +461,7 @@ class PinkySpawner : MetaSpawner // replaces Demon
 		stop;
 	BullDemon:
 		TNT1 A 0 A_SpawnItemEx("MetaBullDemon",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		stop;
+		stop;*/
 	}
 }
 
@@ -618,121 +756,69 @@ class MetaBossSpawner : MetaSpawner
 {
 	Default
 	{
-		Health 0x7fffffff;
-		Height 0;
-		Radius 0;
-		MONSTER;
-		-COUNTKILL
-		-SOLID
-		+NOCLIP
-		+NOTDMATCH
-		+BOSSDEATH
+		+NOBLOCKMAP
+		+NOSECTOR
+		+NOGRAVITY
+		+THRUACTORS
 	}
 	
-	States
+	override void AfterSpawn(MonsterCore fella)
 	{
-	Spawn:
-		TNT1 A 0;
-		TNT1 A 0;
-		goto CreepyStalker;
-	CreepyStalker:
-		TNT1 A 1; // SFX: HEAVY BREATHING
-		loop;
-	Death:
-		TNT1 A 1;
-		TNT1 A 1 A_BossDeath;
-		Stop;
+		fella.bossTracker = MetaBossSpawner(self);
+	}
+
+	void StopIt()
+	{
+		A_BossDeath();
+		Destroy();
 	}
 }
 
-class BaronOfHellSpawner : MetaBossSpawner // replaces BaronOfHell
+Class BaronOfHellSpawner : MetaBossSpawner // replaces BaronOfHell
 {
-	States
+	override void DoSpawn()
 	{
-	Spawn:
-		BOSS A 0;
-		TNT1 A 0 A_SpawnItemEx("MetaBaronOfHell",0,0,0,0,0,0,0,SXF_SETMASTER|SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		goto CreepyStalker;
+		AddSpawn("MetaBaronOfHell", 1);
 	}
 }
 
 class ArachnotronSpawner : MetaBossSpawner // replaces Arachnotron
 {
-	States
+	override void DoSpawn()
 	{
-	Spawn:
-		BSPI A 0;
-		TNT1 A 0 A_JumpIf(meta_noalts_actors, "Arach");
-		TNT1 A 0 A_JumpIf(meta_contentlocust, "ContentLocustVarietyPack");
-		TNT1 A 0 A_JumpIf(meta_episodicspawns && CallACS("Item_GameDetector", 0, 0, 0) >= 2, "EpisodicSelector");
-		goto Doom2Selector;
-	EpisodicSelector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 6, "Tier3");
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 4, "Tier2");
-		goto Arach;
-	Doom2Selector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 20, "Tier3");
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 8, "Tier2");
-		goto Arach;
-	ContentLocustVarietyPack:
-		TNT1 A 0 A_Jump(90,"Borg");
-		TNT1 A 0 A_Jump(64,"Titan");
-		goto Arach;
-	Tier2:
-		TNT1 A 0 A_Jump(128,"Borg");
-		goto Arach;
-	Tier3:
-		TNT1 A 0 A_Jump(90,"Borg");
-		TNT1 A 0 A_Jump(64,"Titan");
-		goto Arach;
-	Arach:
-		TNT1 A 0 A_SpawnItemEx("MetaArachnotron",0,0,0,0,0,0,0,SXF_SETMASTER|SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		goto CreepyStalker;
-	Borg:
-		TNT1 A 0 A_SpawnItemEx("MetaSpiborg",0,0,0,0,0,0,0,SXF_SETMASTER|SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		goto CreepyStalker;
-	Titan:
-		TNT1 A 0 A_SpawnItemEx("MetaTitantula",0,0,0,0,0,0,0,SXF_SETMASTER|SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		goto CreepyStalker;
+		int maps = brain.GetMapsCleared();
+		
+		if ( brain.IsEpisodic() ? (maps >= 6) : (maps >= 20) )
+		{
+			AddSpawn("MetaSpiborg", 90);
+			AddSpawn("MetaTitantula", 64);
+		}
+		else if ( brain.IsEpisodic() ? (maps >= 4) : (maps >= 8) )
+		{
+			AddSpawn("MetaSpiborg", 128);
+		}
+		
+		AddSpawn("MetaArachnotron", 128);
 	}
 }
 
-class MancubusSpawner : MetaBossSpawner // replaces Fatso
+Class MancubusSpawner : MetaBossSpawner // replaces Fatso
 {
-	States
+	override void DoSpawn()
 	{
-	Spawn:
-		FATT A 0;
-		TNT1 A 0 A_JumpIf(meta_noalts_actors, "Manc");
-		TNT1 A 0 A_JumpIf(meta_contentlocust, "ContentLocustVarietyPack");
-		TNT1 A 0 A_JumpIf(meta_episodicspawns && CallACS("Item_GameDetector", 0, 0, 0) >= 2, "EpisodicSelector");
-		goto Doom2Selector;
-	EpisodicSelector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 7, "Tier3");
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 3, "Tier2");
-		goto Manc;
-	Doom2Selector:
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 16, "Tier3");
-		TNT1 A 0 A_JumpIf(CallACS("Monster_ReturnMaps", 0, 0, 0) >= 8, "Tier2");
-		goto Manc;
-	ContentLocustVarietyPack:
-		TNT1 A 0 A_Jump(90,"Behemoth", "Cyber");
-		goto Manc;
-	Tier2:
-		TNT1 A 0 A_Jump(128,"Behemoth");
-		goto Manc;
-	Tier3:
-		TNT1 A 0 A_Jump(128,"Behemoth", "Cyber");
-		goto Manc;
-	Manc:
-		TNT1 A 0 A_SpawnItemEx("MetaMancubus",0,0,0,0,0,0,0,SXF_SETMASTER|SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		goto CreepyStalker;
-	Behemoth:
-		TNT1 A 0 A_SpawnItemEx("MetaBehemoth",0,0,0,0,0,0,0,SXF_SETMASTER|SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		goto CreepyStalker;
-	Cyber:
-		TNT1 A 0 A_SpawnItemEx("MetaCyberManc",0,0,0,0,0,0,0,SXF_SETMASTER|SXF_TRANSFERPOINTERS|SXF_TRANSFERAMBUSHFLAG|SXF_TRANSFERSPECIAL|SXF_NOCHECKPOSITION,0,tid);
-		goto CreepyStalker;
+		int maps = brain.GetMapsCleared();
+		
+		if ( brain.IsEpisodic() ? (maps >= 7) : (maps >= 16) )
+		{
+			AddSpawn("MetaBehemoth", 128);
+			AddSpawn("MetaCyberManc", 64);
+		}
+		else if ( brain.IsEpisodic() ? (maps >= 3) : (maps >= 8) )
+		{
+			AddSpawn("MetaBehemoth", 64);
+		}
+		
+		AddSpawn("MetaMancubus", 128);
 	}
 }
 
