@@ -44,3 +44,11 @@ server int meta_footsteps = 1;
 
 // temp storage for ironman obit
 server string meta_ironmantemp = "None";
+
+// CLIENT SHITE
+
+user bool meta_altweaponpick = true;
+
+// DEBUG
+
+server noarchive int _metadebug_forcemaps = -1;
