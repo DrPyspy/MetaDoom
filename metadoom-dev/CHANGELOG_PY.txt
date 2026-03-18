@@ -1,10 +1,19 @@
 = QoL Changes =
 	- Enemy giblets have been mostly ported into VisualThinkers, putting less strain on performance.
 
-= Weapon Changes =
-	- Universal
+= Weapons =
+	- General Changes
 		- Weapon slots now save your last chosen weapon, allowing you to select your preferred weapons instantly.
 		- Added a smoother system for recoil that retains the visual impact without causing the view to hitch.
+		- Super weapons have been moved from slot 7 to 8. A bind to quickly swap to slot 8 has been added for convenience!
+		- Quick melee will now use your currently selected melee weapon's alt-fire.
+	- Melee Weapons
+		- Melee weapons have been generally reworked. Alt-fires require charges.
+	- Chainsaw
+		- Alt-fire has been reworked.
+			- The swipes still rip through enemies, but will only damage them on the first hit.
+			- Successful hits spawn health.
+			- Killing blows spawn a large bundle of health based on the enemy's initial health.
 	- Super Shotgun
 		- Sprites have been painted over and revamped!
 		- New sounds that play when the hook is on cooldown.
@@ -16,17 +25,42 @@
 		- Missiles now deviate slightly, veering off course the longer they fly.
 	- Chaingun
 		- Sprites have been painted over and revamped!
-		- Chaingun alt-fire now heavily slows the player instead of freezing them completely.
+		- Chaingun alt-fire now heavily slows the player and prevents jumping, instead of freezing them completely.
 	- Rocket Launcher
 		- Sprites have been painted over and revamped!
 	- Grenade Launcher
 		- Sprites have been painted over and revamped!
 		- Grenade projectiles now shoot out a little farther.
-		- Grenades now bounce more consistently and will always automatically detonate after 2 seconds.
+		- Grenades now bounce more consistently and will always automatically detonate after 1.6s.
 	- BFG 9000
 		- Sprites have been painted over and revamped!
-		- The projectile now shoots tendrils onto more than one enemy as it passes by, dealing more damage overall.
-		- Tendril range is longer.
-		- Enemies hit by the tendrils will be briefly stunned.
-		- The projectile and its tendrils always cause enemies to gib. Delicious!
-		- Alt-fire shoots out more projectiles, behaving more similarly to the beta BFG and dealing more consistent damage.
+		- The primary attack has been reworked to lean more into the Doom 3/Doom 2016 behavior. The original tracer-based Doom behavior has been phased out.
+			- The projectile now shoots tendrils onto more than one enemy as it passes by, dealing more damage overall.
+			- Tendril range is longer.
+			- Enemies hit by the tendrils will be briefly stunned.
+			- The projectile and its tendrils always cause killed enemies to gib. Delicious!
+		- Alt-fire shoots out way more projectiles, behaving more similarly to the beta BFG and dealing more consistent damage. Optimized for close range encounters!
+	
+= Inventory =
+	- General Changes
+		- You can now swap between primary and secondary inventory slots, allowing you to quickly access two different inventory items during combat.
+		- Inventory cooldown logic has been rewritten and simplified.
+	- Flame Belch
+		- Added use animation.
+		- Flame particles have been redone.
+		- Armor drop logic has been moved from the base monster class into the on-fire status itself, allowing DEHACKED monsters to drop armor when set on fire.
+	- The Artifact
+		- Timestop has been rewritten to hopefully prevent it malfunctioning and not doing anything.
+		- Added a fancy shader effect and new sounds to indicate when timestop is active.
+		
+= Enemies =
+	- General Changes
+		- Rewrote the monster spawning and randomization system.
+	- NEW: Maggot!
+		- A quick-moving melee demon that crawls close to the floor to avoid getting hit. Get up close to get a better shot, but watch out for those... hands! Hooves. Nubs?
+	- Bull Demon
+		- Adjusted spawn chances to appear more often around 10 maps in.
+	- Marauder
+		- The Marauder has been reworked to be more readable and hopefully more engaging to fight.
+		- Now vulnerable to damage from players who aren't his target, letting players team up to take one down.
+		- New sprites and animations!
