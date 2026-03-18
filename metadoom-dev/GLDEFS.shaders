@@ -2,3 +2,12 @@ hardwareshader texture "graphics/hud_v2/hurtpulse.png"
 {
 	Shader "shaders/metadoom/ui_hurtpulse.fp"
 }
+
+HardwareShader PostProcess scene
+{
+	Name "MetaDoom_HellTime"
+	Uniform float md_amount
+	Uniform float md_timer
+	Shader "shaders/metadoom/helltime.fp" 330
+	Enabled
+}
