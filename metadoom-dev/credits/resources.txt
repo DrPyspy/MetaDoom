@@ -1,0 +1,36 @@
+--------------------------------------------------------------------------------
+	RESOURCES (WEAPONS)
+--------------------------------------------------------------------------------
+	
+	= Axe =
+		Original spriteset by Neoworm
+		Edit by DrPyspy
+	
+	= Pistol =
+		Derived from the pistols from Doom and Doom 2016
+		Edit by The Kins
+	
+	= Super Shotgun =
+		Derived from the super shotgun from Doom II (+ id Vault assets)
+		Original edit by The Kins
+		Further edits by DrPyspy
+	
+	= Rocket Launcher =
+		Derived from the rocket launchers from Doom, Doom 64, and Doom 3
+		Edit by DrPyspy
+	
+	= Grenade Launcher =
+		Derived from the grenade launcher from Doom 2016 (+ id Vault assets)
+		Edit by DrPyspy
+	
+	= BFG 9000 =
+		Derived from the BFG 9000s(s) from Doom, Doom 64, and Doom 2016
+		Original edit by The Kins
+		Further edits by DrPyspy
+		
+--------------------------------------------------------------------------------
+	RESOURCES (EQUIPMENT)
+--------------------------------------------------------------------------------
+	
+	= Flame Belch =
+		Original spriteset by Tesefy
