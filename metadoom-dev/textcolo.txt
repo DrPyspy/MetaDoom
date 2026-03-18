@@ -35,6 +35,13 @@ Flat:
 	#000000
 }
 
+MetaWhite
+{
+	#FFFFFF  #FFFFFF
+Flat:
+	#FFFFFF
+}
+
 MetaHudDark
 {
 	#2F2F2F  #000000
