@@ -217,7 +217,7 @@ class GrenadeLauncherProj : Actor
 		}
 	}
 	
-	override int SpecialBounceHit(Actor bounceMobj, Line bounceLine, SecPlane bouncePlane)
+	override int SpecialBounceHit(Actor bounceMobj, Line bounceLine, readonly<SecPlane> bouncePlane, bool is3DFloor)
 	{
 		if ( bounceMobj && bounceMobj.bShootable )
 		{
