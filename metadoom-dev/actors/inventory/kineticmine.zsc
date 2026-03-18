@@ -59,7 +59,7 @@ class KineticMinePickupRetrieve : KineticMinePickup
 	}
 }
 
-class KineticMine : CustomInventory
+Class KineticMine : MetaEquipmentBase
 {
 	Default
 	{
@@ -71,25 +71,20 @@ class KineticMine : CustomInventory
 		inventory.maxamount 1;
 		+INVENTORY.INVBAR
 		scale 0.5;
+		
+		MetaEquipmentBase.CooldownTime INV_COOLDOWN_GENERIC;
 	}
 	
-	states
+	States
 	{
-	Spawn:
-		KMIN Z -1;
-		stop;
-	Use:
-		TNT1 A 0
-		{
-			if (CountInv("InventoryFuel_KineticMine") >= INV_COOLDOWN_GENERIC)
-			{
-				A_FireProjectile("KineticMineProj",0,0);
-				A_TakeInventory("InventoryFuel_KineticMine", 999);
-			} else {
-				A_PlaySound("menu/invalid");
-			}
-		}
-		fail;
+		Spawn:
+			KMIN Z -1;
+			stop;
+	}
+	
+	override void UseEquipment()
+	{
+		ThrowProjectile("KineticMineProj");
 	}
 }
 

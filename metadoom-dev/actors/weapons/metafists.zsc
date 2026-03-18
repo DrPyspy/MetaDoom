@@ -6,9 +6,9 @@ Fists
 ----------------------------
 */
 
-// The Last Resort - if you lose your pistol somehow, this is given to you to
-// give you a fighting chance.
-class MetaLastResortFist : MetaDoomWeapon
+// [Py] The last resort fists, now no longer a last resort!
+
+class MetaFist : MetaDoomMeleeWeapon
 {
 	Default
 	{
@@ -20,27 +20,83 @@ class MetaLastResortFist : MetaDoomWeapon
 		+WEAPON.MELEEWEAPON
 		+WEAPON.NOALERT
 		+WEAPON.CHEATNOTWEAPON
+		
+		MetaDoomMeleeWeapon.MaxCharges 3;
+		MetaDoomMeleeWeapon.ChargeTime 70;
 	}
 	
 	States
 	{
-	Ready:
-		PUNG A 1 A_WeaponReady;
-		"####" A 0 A_JumpIfInventory("MeleePunch", 1, "MeleePunch");
-		Loop;
-	Deselect:
-		PUNG A 0 A_JumpIf(health <= 0, "DeadDude");
-		PUNG A 0 A_PlaySound("weapons/swap");
-	FinishDeselect:
-		PUNG A 1 A_SmoothLower();
-		Loop;
-	Select:
-		PUNG A 0 A_OverlayScale(PSP_WEAPON, 1, 1);
-		goto Ready;
-	AltFire:
-	Fire:
-		TNT1 A 0;
-		goto MeleePunch;
+		Ready:
+			PUNG A 1 A_WeaponReady;
+			"####" A 0 A_JumpIfInventory("MeleePunch", 1, "MeleePunch");
+			Loop;
+		Deselect:
+			PUNG A 0 A_JumpIf(health <= 0, "DeadDude");
+			PUNG A 0 A_PlaySound("weapons/swap");
+		FinishDeselect:
+			PUNG A 1 A_SmoothLower();
+			Loop;
+		Select:
+			PUNG A 0 A_OverlayScale(PSP_WEAPON, 1, 1);
+			goto Ready;
+		Fire:
+			PUNL B 1;
+			PUNL DF 1;
+			PUNL G 1 A_CustomPunch(15, TRUE, CPF_NOTURN,"MetaMeleePuff",80,0,0,"BasicArmorBonus","weapons/melee/hit");
+			PUNL IKMOQ 1;
+			TNT1 A 6;
+			Goto Ready;
+		Overlay.QuickMeleeOffset:
+			TNT1 A 1 A_WeaponOffset(-233.09, 142.00, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-184.85, 55.41, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-90.29, 41.87, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(1.10, 35.61, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(11.09, 32.78, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(10.26, 32.00, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(15.96, 32.52, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(24.59, 34.21, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(27.91, 37.27, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(35.92, 42.01, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(55.56, 48.86, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(78.93, 58.46, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(108.98, 71.91, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(149.79, 91.33, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(180.51, 122.21, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(194.00, 230.83, WOF_INTERPOLATE);
+			Stop;
+		AltFire:
+		QuickMelee:
+			PUNG G 1 
+			{
+				A_PlaySound("weapons/melee/wiff");
+				
+				if (CountInv("PowerMetaDamage") > 0)
+				{
+					A_PlaySound("powerups/quad/use", CHAN_5);
+				}
+			
+				let recoil = new("Meta_RecoilInfo");
+				recoil.tics_in = 2;
+				recoil.tics_out = 6;
+				recoil.yaw = -0.5;
+				recoil.roll = -0.15;
+				recoil.roll_speed = random(25,30);
+				recoil.roll_shake = 0.05;
+				A_MetaRecoil(recoil);
+				
+				A_Overlay(13, "Overlay.QuickMeleeOffset");
+			}
+			PUNG GG 1; //PNCH BCDE 1 
+			PUNG G 1 A_CustomPunch(15, TRUE, CPF_NOTURN,"MetaMeleePuff",80,0,0,"BasicArmorBonus","weapons/melee/hit");
+			PUNG GGGGGGGGGGGGG 1;
+			"----" A 0
+			{
+				//A_WeaponOffset(0, 64);
+				return A_JumpIfQuickMelee("Deselect");
+			}
+			PUNG G 0 A_PlaySound("weapons/swap");
+			Goto Ready;
 	}
 }
 

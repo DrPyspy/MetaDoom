@@ -48,7 +48,33 @@ class FlameBelchPickup : CustomInventory
 	}
 }
 
-class FlameBelch : CustomInventory
+Extend Class MetaDoomWeapon
+{
+	States
+	{
+		Overlay.FlameBelch:
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -128, -64);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -64, -32, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -32, -16, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -16, -8, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -8, -4, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -4, -2, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -2, -1, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -1, -0.5, WOF_INTERPOLATE);
+			FBLC A 24 A_OverlayOffset(PSP_METAINV, 0, 0, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -1, -0.5, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -2, -1, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -4, -2, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -8, -4, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -16, -8, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -32, -16, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -64, -32, WOF_INTERPOLATE);
+			FBLC A 1 A_OverlayOffset(PSP_METAINV, -128, -64, WOF_INTERPOLATE);
+			Stop;
+	}
+}
+
+class FlameBelch : MetaEquipmentBase
 {
 	Default
 	{
@@ -60,25 +86,19 @@ class FlameBelch : CustomInventory
 		inventory.maxamount 1;
 		+INVENTORY.INVBAR
 		scale 0.5;
+		
+		MetaEquipmentBase.CooldownTime INV_COOLDOWN_GENERIC;
 	}
 	
-	states
+	override void UseEquipment()
 	{
-	Spawn:
-		FBLC Z -1;
-		stop;
-	Use:
-		TNT1 A 0
-		{
-			if (CountInv("InventoryFuel_FlameBelch") >= INV_COOLDOWN_GENERIC)
-			{
-				A_FireProjectile("FlameBelchAttack",0, 0, 0, CMF_TRACKOWNER);
-				A_TakeInventory("InventoryFuel_FlameBelch", 999);
-			} else {
-				A_PlaySound("menu/invalid");
-			}
-		}
-		fail;
+		ThrowProjectile("FlameBelchAttack", 0);
+		let def = GetDefaultByType("MetaDoomWeapon");
+		let psp = owner.player.GetPSprite(PSP_METAINV);
+		psp.SetState(def.resolveState("Overlay.FlameBelch"));
+		psp.bAddBob = false;
+		psp.bAddWeapon = false;
+		//psp.y = -32;
 	}
 }
 
@@ -98,133 +118,114 @@ Class FlameBelchAttack : Actor
 		Super.Tick();  
 	}
 	
+	action void A_BelchFlame()
+	{
+		let target = PlayerPawn(target);
+		if ( !target ) return;
+		Quat base = Quat.FromAngles(target.angle, target.pitch, target.roll);
+		Vector3 spawnPos = (target.pos.x, target.pos.y, target.player.viewz);
+		Vector3 offset = (0, 11, 7);
+		spawnPos += base * offset;
+		let fire = Spawn("FlameBelchFire", spawnPos);
+		if ( fire )
+		{
+			fire.target = target;
+			fire.Vel3DFromAngle(fire.speed, angle-2, pitch+3.5);
+		}
+	}
+	
 	States
 	{
 		Spawn:
-			TNT1 A 0 NoDelay A_StartSound("inventory/flamebelch/fire", 451, 0, 1.0, ATTN_NORM, 1.0);
+			TNT1 A 0 NoDelay
+			{
+				target.A_StartSound("inventory/flamebelch/fire", 451, 0, 1.0, ATTN_NORM, 1.0);
+			}
 			TNT1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 1 
 			{
 				target.A_AlertMonsters();
-				
-				FLineTraceData SurfaceData;
-				target.LineTrace(target.angle + 90, 32, 0, TRF_THRUACTORS, offsetz: 0, offsetside: 0, data:SurfaceData);
-				
-				if (SurfaceData.HitType == SurfaceData.TRACE_HitWall)
-				{
-					if (meta_developer)
-						Console.printf("Player at %i x %i ain't got burnin' room", self.pos.x, self.pos.y);
-						
-					target.A_SpawnProjectile("FlameBelchFire", 42, 0, 0, CMF_TRACKOWNER|CMF_AIMDIRECTION, target.pitch);
-				} else {
-					target.A_SpawnProjectile("FlameBelchFire", 42, -8, -2, CMF_TRACKOWNER|CMF_AIMDIRECTION, target.pitch);
-				}
+				A_BelchFlame();
 			}
 			Stop;
 	}
 }
 
 // Imported from Reelism 2, which was imported from FauxDM...
-Class FlameBelchFire : CustomProj
+Class FlameBelchFire : Actor
 {
 	Default
 	{
 		Radius 10;
 		Height 10;
-		CustomProj.RadiusScale 0.0;
-		CustomProj.HeightScale 0.0;
-		CustomProj.RadiusScaleFactor 0.03;
-		CustomProj.HeightScaleFactor 0.03;
+		Projectile;
 		
-		CustomProj.CustomDamage 5;
+		DamageFunction 5*random(1,3);
 		DamageType "BelchFire";
-		CustomProj.SplashDamage 10;
-		CustomProj.SplashRadiusScale 1.3;
-		
-		CustomProj.DOTItem "MetaBurnDOT";
-		CustomProj.AOEActor "MetaFireAOE";
 		
 		Scale 0.03;
-		CustomProj.XScaleFactor 0.0;
-		CustomProj.YScaleFactor 0.0;
 		
-		Speed 16;
-		RenderStyle "Add";
+		Speed 20;
+		RenderStyle "ColorAdd";
 		Obituary "$OB_FLAMEBELCH";
 		
 		+FORCEXYBILLBOARD
 		+DONTSPLASH
-		+NoGravity
-		+Missile
 		+ROLLSPRITE
 		+ROLLCENTER
 	}
 	
 	int dir;
 	int dottimer;
+	bool fadeOut;
 	
 	States
 	{
-	Spawn:
-		FTHR A 0 NoDelay
-		{
-			self.vel.xy += target.vel.xy;
-		}
-	SpawnLoop:
-		FTHR A 0
-		{
-			dir = random(0,1);
-			roll = random(0,360);
-		}
-		goto Start;
-	Start:
-		FTHR ABCDABCDABCDABCD 1 BRIGHT
-		{
-			if (dir == 1)
+		Spawn:
+			FTHR A 0 NoDelay
 			{
-				roll = roll + 4;
-			} else {
-				roll = roll - 4;
+				self.vel.xy += target.vel.xy;
+				scale *= frandom(0.95,1.05);
 			}
-			
-			A_SetScale(scale.x + 0.03);
-			//A_ScaleVelocity (1.25);
-		}
-		goto Looper;
-	Looper:
-		FTHR ABCD 1 BRIGHT
-		{
-			if (dir == 1)
+		SpawnLoop:
+			FTHR A 0
 			{
-				roll = roll + 4;
-			} else {
-				roll = roll - 4;
+				dir = random(0,1) ? 1 : -1;
+				roll = random(0,360);
 			}
-			
-			A_SetScale(scale.x + 0.05);
-			A_ScaleVelocity (0.75);
-			A_FadeOut(0.03);
-		}
-		Loop;
-	Death:
-		// Basically, always have the FireAOE spawn on hitting the ground, but
-		// have a small chance of it spawning when hitting walls.
-		TNT1 A 0 A_Jump(200, "XDeath");
-		TNT1 A 0 
-		{
-			if (A_SpawnAreaOfEffect() == false)
+			goto Start;
+		Start:
+			FTHR AAAAAAAA 1 BRIGHT
 			{
-				A_SpawnItemEx("MetaFireAOE",0,0,0,0,0,0,0,SXF_TRANSFERPOINTERS);
+				roll += 4*dir;
+				
+				A_SetScale(scale.x + 0.1);
+				vel *= 0.96;
+				//vel.z += 0.025;
 			}
-		}
-		stop;
-	XDeath:
-		TNT1 A 0 A_SpawnAreaOfEffect();
-		Stop;
+			goto Looper;
+		Looper:
+			FTHR ABCDEFGHIJKLMNOP 1 BRIGHT
+			{
+				fadeOut = true;
+			}
+			Stop;
+		Death:
+			Stop;
+		XDeath:
+			Stop;
 	}
 	
 	override void Tick()
 	{
 		Super.Tick();
+		
+		roll += 4*dir;
+		
+		if ( fadeOut )
+		{
+			A_SetScale(scale.x + 0.05);
+			vel *= 0.96;
+		}
 		
 		dottimer++;
 		
@@ -241,146 +242,178 @@ Class FlameBelchFire : CustomProj
 			self.Destroy();
 		}
 	}
-}
-
-class MetaBurnDOT : CustomDOT
-{
-	Default
+	
+	override int SpecialMissileHit(Actor victim)
 	{
-		Damage 5;
-		DamageType "BelchFire";
+		if ( victim == target ) return 1;
+		if ( !victim.bSHOOTABLE ) return 1;
+		if ( victim.health <= 0 ) return 1;
 		
-		CustomDOT.NumberOfTics 3;
-		CustomDOT.Duration 3;
-		CustomDOT.MaxTotalDOTs 3;
-		CustomDOT.EffectSpawnRate 0.01;
-		CustomDOT.StackType "Stackable";
-		CustomDOT.DamageApplication "Delayed";
-		CustomDOT.EffectActor "MetaFlameEffect";
+		victim.GiveInventory("MetaFlameBelch_DOT", 1);
 		
-		Obituary "$OB_FLAMETHROWER_DOT";
+		return -1;
 	}
 }
 
-class MetaFlameEffect : DOTEffect
+Class MetaFlameBelch_DOT : Inventory
 {
-	Default
-	{
-		DOTEffect.NoWarp true;
-		
-		RenderStyle "Add";
-		Alpha 0.75;
-		Scale 0.5;
-		+DONTSPLASH
-	}
+	Actor causer;
+	int timer;
 	
-	double crackvolume;
-	
-	States
+	// If on fire, spawn some Armor
+	// Based on Shadsy's Mega Imp code from Reelism 2
+	override void ModifyDamage(int damage, Name damageType, out int newdamage, bool passive, Actor inflictor, Actor source, int flags)
 	{
-		Spawn:
-			FTRA A 0;
-			FTRA A 0 { crackvolume = 0.25; }
-			FTRA ABCDEFGHIJK 1 Bright;
-			Stop;
-	}
-	
-	override void Tick()
-	{
-		super.Tick();
+		int twiddle;
+		bool willKill = (owner.health - damage) <= 0;
 		
-		crackvolume - 0.1;
-		
-		A_StartSound("inventory/flamebelch/crak",CHAN_BODY,0,crackvolume,ATTN_NORM,frandom(0.5,1));
-	}
-}
-
-// Copy for use in death sequences
-class MetaFlameDeathEffect : Actor
-{
-	Default
-	{
-		RenderStyle "Add";
-		Alpha 0.75;
-		Scale 0.5;
-		+DONTSPLASH
-		+NOBLOCKMAP
-		+NOGRAVITY
-	}
-	
-	double crackvolume;
-	
-	States
-	{
-		Spawn:
-			FTRA A 0;
-			FTRA A 0 { crackvolume = 0.25; }
-			FTRA ABCDEFGHIJK 1 Bright;
-			Stop;
-	}
-	
-	override void Tick()
-	{
-		super.Tick();
-		
-		crackvolume - 0.1;
-		
-		A_StartSound("inventory/flamebelch/crak",CHAN_BODY,0,crackvolume,ATTN_NORM,frandom(0.5,1));
-	}
-}
-
-class MetaFireAOE : CustomAOE
-{
-	Default
-	{
-		Radius 16;
-		Height 24;
-		Damage 5;
-		DamageType "BelchFire";
-		
-		CustomAOE.CoolDown 0.25;
-		CustomAOE.DOTItem "MetaBurnDOT";
-		CustomAOE.EffectSpawnRate 0.1;
-		CustomAOE.EffectActor "MetaGroundFireFlame";
-		
-		Obituary "$OB_FLAMEBELCH";
-		
-		+DONTSPLASH
-		-NOGRAVITY
-	}
-	
-	States
-	{
-		Spawn:
-			TNT1 A 70;
-			Stop;
-	}
-	
-	override void BeginPlay()
-	{
-		super.BeginPlay();
-				
-		if (pos.z == GetZAt() && GetFloorTerrain().IsLiquid)
+		if ( willKill )
 		{
-			A_StartSound("inventory/flamebelch/sizzle");
-			A_SpawnItem("MetaExtinguishSmokeGenerator");
+			twiddle = GetSpawnHealth() / 25;
+			
+			if (twiddle < 4)
+			{
+				twiddle = 4;
+			} else if (twiddle > 12)
+			{
+				twiddle = 12;
+			}
+		}
+		else
+		{
+			if (damage >= 100)
+			{
+				twiddle = 8;
+			} else {
+				twiddle = (damage / 25);
+			}
+		}
+		
+		for (int i = 0; i < 1+ twiddle; i++) 
+		{
+			owner.A_SpawnItemEx("MetaArmorPinataFade",random(0,radius/2),random(0,radius/2),random(16,height),random(2,8),0,random(4,8),random(0,365),SXF_NOCHECKPOSITION);
+		}
+	}
+	
+	override void DoEffect()
+	{
+		if ( owner.health <= 0 )
+		{
+			Destroy();
+			return;
+		}
+		
+		if ( timer % 3 == 0 )
+		{
+			owner.DamageMobj(causer, causer, 3, 'BelchFire');
+			owner.A_StartSound("inventory/flamebelch/crak", 67+(level.maptime%10), volume: frandom(0.5,0.7), pitch: frandom(0.5,1.0));
+		}
+		
+		let p = Level.SpawnVisualThinker("MetaFlameBelch_Flame");
+		if ( p )
+		{
+			p.pos = owner.pos + (frandom(-radius/2,radius/2),frandom(-radius/2,radius/2),owner.height/2);
+		}
+		
+		timer++;
+		
+		if ( timer >= 35*3 )
+		{
 			Destroy();
 			return;
 		}
 	}
-		
-	override void Tick()
+}
+
+Class MetaFlameBelch_Flame : VisualThinker
+{
+	static const string frames[] =
 	{
-		super.Tick();
+		"FFLAA0",
+		"FFLAB0",
+		"FFLAC0",
+		"FFLAD0",
+		"FFLAE0",
+		"FFLAF0",
+		"FFLAG0",
+		"FFLAH0",
+		"FFLAI0",
+		"FFLAJ0",
+		"FFLAK0",
+		"FFLAL0",
+		"FFLAM0",
+		"FFLAN0",
+		"FFLAO0",
+		"FFLAP0",
 		
-		if (waterlevel > 0 || (pos.z == GetZAt() && (GetFloorTerrain().TerrainName == "Water" || GetFloorTerrain().TerrainName == "FakeWater")))
-		{
-			A_StartSound("inventory/flamebelch/sizzle");
-			A_Remove(AAPTR_DEFAULT,RMVF_EVERYTHING);
-			A_SpawnItem("MetaExtinguishSmokeGenerator");
-		}
+		"FFLAA0",
+		"FFLAB0",
+		"FFLAC0",
+		"FFLAD0",
+		"FFLAE0",
+		"FFLAF0",
+		"FFLAG0",
+		"FFLAH0",
+		"FFLAI0",
+		"FFLAJ0",
+		"FFLAK0",
+		"FFLAL0",
+		"FFLAM0",
+		"FFLAN0",
+		"FFLAO0",
+		"FFLAP0",
+		
+		"FFLAQ0",
+		"FFLAR0",
+		"FFLAS0",
+		"FFLAT0",
+		"FFLAU0",
+		"FFLAV0",
+		"FFLAW0",
+		"FFLAX0",
+		"FFLAY0",
+		"FFLAZ0"
+	};
+	
+	int frame;
+	int stagger;
+	
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+		SetRenderStyle(STYLE_ColorAdd);
+		flags = SPF_ROLL|SPF_FULLBRIGHT;
+		roll = random(0,360);
+		frame = random(0, frames.Size()-1);
+		
+		texture = TexMan.CheckForTexture(frames[frame]);
 	}
 	
+	override void Tick()
+	{
+		if ( bDESTROYED )
+			return;
+	
+		super.Tick();
+		
+		stagger += 1;
+		if ( stagger >= 3 )
+		{
+			frame += 1;
+			if ( frame >= frames.Size() )
+			{
+				Destroy();
+				return;
+			}
+			frame = frame % frames.Size();
+			texture = TexMan.CheckForTexture(frames[frame]);
+		}
+		
+		vel.z += 0.1;
+		//scolor = Color(fadeOut_red, fadeOut_other, fadeOut_other);
+		scale.x -= 0.01;
+		scale.y -= 0.01;
+	}
 }
 
 class MetaGroundFireFlame : Actor

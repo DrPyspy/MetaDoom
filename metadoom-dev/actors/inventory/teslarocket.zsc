@@ -38,7 +38,7 @@ class TeslaRocketPickup : CustomInventory
 	}
 }
 
-class TeslaRocket : CustomInventory
+Class TeslaRocket : MetaEquipmentBase
 {
 	Default
 	{
@@ -50,26 +50,21 @@ class TeslaRocket : CustomInventory
 		inventory.maxamount 1;
 		+INVENTORY.INVBAR
 		scale 0.5;
+		
+		MetaEquipmentBase.CooldownTime INV_COOLDOWN_SIPHON;
 	}
 	
-	states
+	States
 	{
-	Spawn:
-		TSLA Z -1;
-		stop;
-	Use:
-		TNT1 A 0
-		{
-			if (CountInv("InventoryFuel_TeslaRocket") >= INV_COOLDOWN_SIPHON)
-			{
-				A_PlaySound ("inventory/teslarocket/throw");
-				A_FireProjectile("TeslaRocketProj",0,0,0,0,FPF_NOAUTOAIM | CMF_TRACKOWNER);
-				A_TakeInventory("InventoryFuel_TeslaRocket", 999);
-			} else {
-				A_PlaySound("menu/invalid");
-			}
-		}
-		fail;
+		Spawn:
+			TSLA Z -1;
+			stop;
+	}
+	
+	override void UseEquipment()
+	{
+		owner.A_PlaySound("inventory/teslarocket/throw");
+		ThrowProjectile("TeslaRocketProj", 0);
 	}
 }
 

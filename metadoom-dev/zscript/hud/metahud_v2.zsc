@@ -10,6 +10,14 @@ Status Bar
 // kind of nasty I can deal with. This port wasn't TOO troublesome, probably
 // because I got most of the profanity out of the way during JPF.
 
+Class MetaDoom_NotifyMessage
+{
+	string text;
+	int time;
+	double prev;
+	double y;
+}
+
 class MetaDoomStatusBar : BaseStatusBar
 {
 	HUDFont mHUDFont;
@@ -43,6 +51,29 @@ class MetaDoomStatusBar : BaseStatusBar
 	double lowHealthFade;
 	
 	int x_off;
+	
+	Array<MetaDoom_NotifyMessage> msg_logs;
+	int score_time;
+	int score_prev;
+	double score_scale;
+	double score_scalePrev;
+	
+	override bool ProcessNotify(EPrintLevel printlevel, String outline)
+	{
+		if ( printlevel <= PRINT_TEAMCHAT )
+		{
+			let msg = new("MetaDoom_NotifyMessage");
+			msg.text = outline;
+			msg.time = 35*4;
+			msg_logs.Push(msg);
+			if ( msg_logs.Size() > 3 )
+			{
+				msg_logs.Delete(0);
+			}
+			return true;
+		}
+		return false;
+	}
 
 	override void Init()
 	{
@@ -116,6 +147,45 @@ class MetaDoomStatusBar : BaseStatusBar
 				lowHealthFade -= 0.1;
 			}
 		}
+		
+		for ( int i = 0; i < msg_logs.Size(); i++ )
+		{
+			msg_logs[i].time -= 1;
+			if ( msg_logs[i].time <= 0 )
+			{
+				msg_logs.Delete(i);
+				i -= 1;
+				continue;
+			}
+			msg_logs[i].prev = msg_logs[i].y;
+			int targY = i*9;
+			if ( targY >= msg_logs[i].y )
+			{
+				msg_logs[i].y = targY;
+				msg_logs[i].prev = targY;
+			}
+			else
+			{
+				msg_logs[i].y = msg_logs[i].y + (targY - msg_logs[i].y) * 0.8;
+			}
+		}
+		
+		if ( score_time > 0 )
+		{
+			score_time -= 1;
+		}
+		
+		if ( mScoreInterpolator.GetValue() > score_prev )
+		{
+			score_time = 35*4;
+			int diff = mScoreInterpolator.GetValue() - score_prev;
+			score_scale = min(1.0, diff/1000.0);
+		}
+		
+		score_prev = mScoreInterpolator.GetValue();
+		
+		score_scalePrev = score_scale;
+		score_scale *= 0.75;
 	}
 
 	override void Draw (int state, double TicFrac)
@@ -126,6 +196,9 @@ class MetaDoomStatusBar : BaseStatusBar
 		{
 			return;
 		}
+		
+		let player = MetaDoomPlayer(CPlayer.mo);
+		if ( !player ) return;
 		
 		BeginStatusBar();
 		
@@ -144,14 +217,14 @@ class MetaDoomStatusBar : BaseStatusBar
 			DTA_SrcWidth, 124, DTA_DestWidth, 124,
 			DTA_320x200, true
 			);
-		screen.DrawTexture(tex, false, 320+x_off-124, 0,
-			DTA_SrcX, 320-124,
-			DTA_SrcWidth, 124, DTA_DestWidth, 124,
+		screen.DrawTexture(tex, false, 320+x_off-110, 0,
+			DTA_SrcX, 320-110,
+			DTA_SrcWidth, 110, DTA_DestWidth, 110,
 			DTA_320x200, true
 			);
-		screen.DrawTexture(tex, false, 160-48, 0,
-			DTA_SrcX, 160-48,
-			DTA_SrcWidth, 96, DTA_DestWidth, 96,
+		screen.DrawTexture(tex, false, 160-32, 0,
+			DTA_SrcX, 160-32,
+			DTA_SrcWidth, 64, DTA_DestWidth, 64,
 			DTA_320x200, true
 			);
 			
@@ -167,23 +240,45 @@ class MetaDoomStatusBar : BaseStatusBar
 		DrawAmmo(x_right, y);
 		DrawReserve(x_right, y);
 		
-		return;
-		
-		if (state == HUD_StatusBar || automapactive)
+		for ( int i = 0; i < msg_logs.Size(); i++ )
 		{
-			DrawImage("HUDBACK", (0, 168), DI_ITEM_OFFSETS);
-			
-			// Stretching/tiling the backdrop for widescreen users.
-			int x1 = 0;
-			int x2 = 0;
-			for ( int i = 1; i < 6; i++ )
+			double alpha = msg_logs[i].time <= 35 ? msg_logs[i].time/35. : 1.0;
+			double y = msg_logs[i].prev + (msg_logs[i].y - msg_logs[i].prev) * ticFrac;
+			DrawString(mSmallFont, msg_logs[i].text, (x_left+2, 2+floor(y)), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, alpha: alpha);
+		}
+		
+		if ( score_time > 0 || automapactive )
+		{
+			double scalar = score_scalePrev + (score_scale - score_scalePrev) * TicFrac;
+			double alpha;
+			if ( automapactive )
 			{
-				x1 = x1 - 320;
-				x2 = x2 + 320;
-				
-				DrawImage("HUDBACK", (x1, 168), DI_ITEM_OFFSETS);
-				DrawImage("HUDBACK", (x2, 168), DI_ITEM_OFFSETS);
+				alpha = 1.0;
 			}
+			else
+			{
+				alpha = score_time <= 35 ? score_time/35. : 1.0;
+			}
+			int yoff = (score_time >= (4*35)) ? (level.maptime % 2) : 0;
+			double flashbert = (level.maptime % 12) / 5.;
+			DrawString(mSmallFont, ""..mScoreInterpolator.GetValue(), (320+x_off-4, 2-yoff), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_WHITE, alpha: alpha, scale: (1.0+scalar,1.0+scalar));
+			if ( score_time >= 4*35 )
+			{
+				DrawString(mSmallFont, ""..mScoreInterpolator.GetValue(), (320+x_off-4, 2-yoff), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.FindFontColor("MetaWhite"), alpha: flashbert*0.25, scale: (1.0+scalar,1.0+scalar));
+			}
+		}
+		
+		if (isInventoryBarVisible())
+		{
+			DrawInventoryBar(diparms, (160, 168), 6);
+		}
+		
+		let meleeWeapon = MetaDoomMeleeWeapon(player.weaponSave[1]);
+		if ( meleeWeapon )
+		{
+			DrawString(mAmountFont, ""..meleeWeapon.charges, (x_left+103, y+11), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_WHITE);
+			//DrawString(mSmallFont, ""..(100*meleeWeapon.GetChargePercent()).."%", (64, 72), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, Font.CR_GOLD);
+			DrawBar("graphics/hud_v2/bar_meleebar.png", "", meleeWeapon.charges == meleeWeapon.maxCharges ? meleeWeapon.chargeTime : meleeWeapon.GetChargePercent()*meleeWeapon.chargeTime, meleeWeapon.chargeTime, (x_left+106, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
 		}
 		
 		/*if (state == HUD_StatusBar)
@@ -223,11 +318,11 @@ class MetaDoomStatusBar : BaseStatusBar
 		// game needs to be checked here, so that SBARINFO also gets the correct colors.
 		DrawString(mSmallFont, level.FormatMapName(0), (160, 200-32-8), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_CENTER);
 		
-		DrawString(mSmallFont, level.TimeFormatted(), ((320+x_off)-2, 2), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT);
+		DrawString(mSmallFont, level.TimeFormatted(), ((320+x_off)-4, 2+9), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT);
 		
 		DrawString(mSmallFont, String.Format("Kills: %d/%d", level.killed_monsters, level.total_monsters), ((-x_off)+2, 2), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
-		DrawString(mSmallFont, String.Format("Items: %d/%d", level.found_items, level.total_items), ((-x_off)+2, 2+8), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
-		DrawString(mSmallFont, String.Format("Secrets: %d/%d", level.found_secrets, level.total_secrets), ((-x_off)+2, 2+16), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
+		DrawString(mSmallFont, String.Format("Items: %d/%d", level.found_items, level.total_items), ((-x_off)+2, 2+9), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
+		DrawString(mSmallFont, String.Format("Secrets: %d/%d", level.found_secrets, level.total_secrets), ((-x_off)+2, 2+18), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT);
 	}
 
 	// Extremely cut down version of the HUD for weirdo althud-havers
@@ -242,14 +337,12 @@ class MetaDoomStatusBar : BaseStatusBar
 	void DrawScore(int x, int y)
 	{
 		// Draw frags in Deathmatch, score if not.
-		if (deathmatch || teamplay)
+		/*if (deathmatch || teamplay)
 		{
 			DrawImage("FGICON", (27, 171), DI_ITEM_OFFSETS);
 			DrawString(mSmallFont2, FormatNumber(CPlayer.FragCount, 3), (89, 172), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_RED);
 		} else {
-			DrawString(mSmallFont2, FormatNumber(mScoreInterpolator.GetValue(), 10), (x+107, y+9),
-			DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT|FNF_FILLZEROS, Font.CR_WHITE);
-		}
+		}*/
 	}
 	
 	void DrawVitals()
@@ -306,8 +399,8 @@ class MetaDoomStatusBar : BaseStatusBar
 	
 	void DrawKeys(int x, int y)
 	{
-		int kX = 43;
-		int kY = 1;
+		int kX = 44;
+		int kY = 21;
 		
 		bool locks[6];
 		String icon;
@@ -391,7 +484,7 @@ class MetaDoomStatusBar : BaseStatusBar
 			}*/
 		DrawBar("graphics/hud_v2/bar_ammobar.png", "graphics/hud_v2/bar_horzbg.png", mAmmoInterpolator.GetValue(), ammomax, (x+36, y+9), 0, SHADER_REVERSE, DI_ITEM_OFFSETS);
 		
-		int slotX = 85-(6*8);
+		int slotX = 85-(7*8);
 		int slotY = 0;
 		bool found;
 		int slot, index;
@@ -407,13 +500,20 @@ class MetaDoomStatusBar : BaseStatusBar
 			if ( i == slot-1 )
 			{
 				textColor = Font.CR_UNTRANSLATED;
+				let tex = TexMan.CheckForTexture("graphics/hud_v2/hud_main.png");
+				screen.DrawTexture(tex, false, x+slotX-2, y,
+					DTA_SrcX, 201, DTA_SrcY, 170,
+					DTA_SrcWidth, 7, DTA_SrcHeight, 8,
+					DTA_DestWidth, 7, DTA_DestHeight, 8,
+					DTA_320x200, true
+					);
 			}
 			else if ( hasInSlot )
 			{
 				textColor = Font.FindFontColor("MetaHudGray");
 			}
 			DrawString(mIndexFont, ""..(i+1), (x+slotX, y+1), DI_TEXT_ALIGN_LEFT|DI_NOSHADOW, textColor);
-			slotX += 6;
+			slotX += 7;
 		}
 	}
 	
@@ -478,8 +578,33 @@ class MetaDoomStatusBar : BaseStatusBar
 	
 	void DrawItemBox (int x, int y)
 	{
+		let player = MetaDoomPlayer(CPlayer.mo);
+		
+		if ( !player ) return;
+		
+		let item1 = MetaEquipmentBase(CPlayer.mo.InvSel);
+		let item2 = MetaEquipmentBase(player.invSlot_backup);
+		
+		if ( item1 )
+		{
+			int amount, max;
+			[amount, max] = item1.GetCooldownVals();
+			
+			bool isFull = amount == max;
+			DrawInventoryIcon(CPlayer.mo.InvSel, (x+19, y+14), DI_ITEM_CENTER, isFull ? 1.0 : 0.5);
+			DrawBar("graphics/hud_v2/bar_invbar.png", "", isFull ? max : amount, max, (x+34, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		}
+		if ( item2 )
+		{
+			int amount, max;
+			[amount, max] = item2.GetCooldownVals();
+			
+			bool isFull = amount == max;
+			DrawInventoryIcon(item2, (x+51, y+9), DI_ITEM_CENTER, isFull ? 1.0 : 0.5, scale: (0.5, 0.5));
+			DrawBar("graphics/hud_v2/bar_invbar2.png", "", isFull ? max : amount, max, (x+61, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+		}
 		// Handle drawing inventory items and the cooldown timer.
-		if (CPlayer.mo.InvSel != null && !level.NoInventoryBar)
+		/*if (CPlayer.mo.InvSel != null && !level.NoInventoryBar)
 		{
 			static const string invItem[] =
 			{
@@ -530,12 +655,10 @@ class MetaDoomStatusBar : BaseStatusBar
 				bool isFull = GetAmount(invCooldownCounter[i]) == invCooldownCap[i];
 				DrawBar("graphics/hud_v2/bar_invbar.png", "graphics/hud_v2/bar_vert.png", isFull ? invCooldownCap[i] : GetAmount(invCooldownCounter[i]), invCooldownCap[i], (x+34, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
 				
-				DrawInventoryIcon(CPlayer.mo.InvSel, (x+19, y+14), DI_ITEM_CENTER, isFull ? 1.0 : 0.5);
-				
 				// Render the icon half-transparent (greyed out) if we're still
 				// under cooldown and unable to spam Cyberdemons to death with
 				// Siphon Grenades. Yeah, I know you.
-				/*if (CPlayer.mo.InvSel is invItem[i] && GetAmount(invCooldownCounter[i]) < invCooldownCap[i])
+				if (CPlayer.mo.InvSel is invItem[i] && GetAmount(invCooldownCounter[i]) < invCooldownCap[i])
 				{
 					DrawInventoryIcon(CPlayer.mo.InvSel, (185, 168), DI_ITEM_OFFSETS, 0.5);
 				} else if (CPlayer.mo.InvSel is invItem[i] && GetAmount(invCooldownCounter[i]) >= invCooldownCap[i]){
@@ -547,13 +670,8 @@ class MetaDoomStatusBar : BaseStatusBar
 					{
 						DrawString(mAmountFont, FormatNumber(CPlayer.mo.InvSel.Amount), (219, 199-mIndexFont.mFont.GetHeight()), DI_TEXT_ALIGN_RIGHT, Font.CR_GOLD);
 					}
-				}*/
+				}
 			}
-		}
-		
-		/*if (isInventoryBarVisible())
-		{
-			DrawInventoryBar(diparms, (48, 168), 7, DI_ITEM_LEFT_TOP|DI_DRAWCURSORFIRST);
 		}*/
 	}
 	
@@ -562,16 +680,23 @@ class MetaDoomStatusBar : BaseStatusBar
 	void DrawInventoryBar(InventoryBarState parms, Vector2 position, int numfields, int flags = 0, double bgalpha = 1.)
 	{
 		double width = parms.boxsize.X * numfields;
-		[position, flags] = AdjustPosition(position, flags, width, parms.boxsize.Y);
+		//[position, flags] = AdjustPosition(position, flags, width, parms.boxsize.Y);
+		position.x -= 28*3;
 		
 		CPlayer.mo.InvFirst = ValidateInvFirst(numfields);
 		if (CPlayer.mo.InvFirst == null) return;	// Player has no listed inventory items.
 		
 		Vector2 boxsize = parms.boxsize;
 		// First draw all the boxes
-		for(int i = 0; i < numfields; i++)
+		let tex = TexMan.CheckForTexture("graphics/hud_v2/hud_main.png");
+		for( int i = 0; i < numfields; i++ )
 		{
-			DrawTexture(parms.box, position + (boxsize.X * i, 0), flags | DI_ITEM_LEFT_TOP, bgalpha);
+			screen.DrawTexture(tex, false, position.x+28*i, 170,
+				DTA_SrcX, 5, DTA_SrcY, 170,
+				DTA_SrcWidth, 28, DTA_SrcHeight, 28,
+				DTA_DestWidth, 28, DTA_DestHeight, 28,
+				DTA_320x200, true);
+			//DrawTexture(parms.box, position + (boxsize.X * i, 0), flags | DI_ITEM_LEFT_TOP, bgalpha);
 		}
 		
 		// now the items and the rest
@@ -583,7 +708,7 @@ class MetaDoomStatusBar : BaseStatusBar
 		Inventory item;
 		for(item = CPlayer.mo.InvFirst; item != NULL && i < numfields; item = item.NextInv())
 		{
-			for(int j = 0; j < 2; j++)
+			/*for(int j = 0; j < 2; j++)
 			{
 				if (j ^ !!(flags & DI_DRAWCURSORFIRST))
 				{
@@ -592,14 +717,18 @@ class MetaDoomStatusBar : BaseStatusBar
 						double flashAlpha = bgalpha;
 						if (flags & DI_ARTIFLASH) flashAlpha *= itemflashFade;
 						// This is the one line I changed. Cool.
-						DrawTexture(parms.selector, position + parms.selectofs + (boxsize.X * i, 2), flags | DI_ITEM_LEFT_TOP, flashAlpha);
+						DrawTexture(parms.selector, (28*i, 170), flags | DI_ITEM_LEFT_TOP, flashAlpha);
 					}
 				}
 				else
-				{
-					DrawInventoryIcon(item, itempos + (boxsize.X * i, 0), flags | DI_ITEM_CENTER );
-				}
+				{*/
+			if (item == CPlayer.mo.InvSel)
+			{
+				DrawTexture(parms.selector, (position.x+28*i, 170) + (14, 14), flags | DI_ITEM_CENTER, 1.0);
 			}
+			DrawInventoryIcon(item, (position.x+28*i, 170) + (14, 14), flags | DI_ITEM_CENTER, scale: (0.9, 0.9));
+			/*	}
+			}*/
 			
 			if (parms.amountfont != null && (item.Amount > 1 || (flags & DI_ALWAYSSHOWCOUNTERS)))
 			{
@@ -607,7 +736,7 @@ class MetaDoomStatusBar : BaseStatusBar
 			}
 			i++;
 		}
-		// Is there something to the left?
+		/*// Is there something to the left?
 		if (CPlayer.mo.FirstInv() != CPlayer.mo.InvFirst)
 		{
 			DrawTexture(parms.left, position + (-parms.arrowoffset.X, parms.arrowoffset.Y), flags | DI_ITEM_RIGHT|DI_ITEM_VCENTER);
@@ -616,7 +745,7 @@ class MetaDoomStatusBar : BaseStatusBar
 		if (item != NULL)
 		{
 			DrawTexture(parms.right, position + parms.arrowoffset + (width, 0), flags | DI_ITEM_LEFT|DI_ITEM_VCENTER);
-		}
+		}*/
 	}
 	
 	// THIS IS ALL A NIGHTMARE. I HAVE NO IDEA WHAT ANY OF THIS DOES. IF YOU

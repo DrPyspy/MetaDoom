@@ -27,6 +27,8 @@ class x100Percent_Secrets : _Boolean {}
 // prevent multiple 100% scripts from running at once
 class x100Percent_Running : _Boolean {}
 
+const PSP_METAINV = 1250;
+
 class MetaDoomPlayer : PlayerPawn
 {
 	Default
@@ -40,7 +42,8 @@ class MetaDoomPlayer : PlayerPawn
 		Player.DisplayName "Slayer";
 		Player.CrouchSprite "MPLC";
 		Player.StartItem "MetaPistol";
-		Player.WeaponSlot 1, "MetaBerserkFist", "MetaLastResortFist", "MetaChainsaw", "MetaAxe", "MetaFireExtinguisher";
+		Player.StartItem "MetaFist";
+		Player.WeaponSlot 1, "MetaBerserkFist", "MetaFist", "MetaAxe", "MetaChainsaw";//, "MetaFireExtinguisher";
 		Player.WeaponSlot 2, "MetaPistol", "MetaHolyWaterPistol";
 		Player.WeaponSlot 3, "MetaShotgun", "MetaSuperShotgun";
 		Player.WeaponSlot 4, "MetaChaingun", "MetaMachineGun";
@@ -82,6 +85,9 @@ class MetaDoomPlayer : PlayerPawn
 	double bob_amount;
 	double bob_amountPrev;
 	
+	int melee_state;
+	Weapon melee_prevWeapon;
+	
 	Inventory GetInvThatIsNotThis(Inventory no = null)
 	{
 		Inventory invbert = InvSel;
@@ -114,7 +120,7 @@ class MetaDoomPlayer : PlayerPawn
 		Super.AddInventory(item);
 		
 		// [Py] fill alt slot if applicable
-		if ( ( InvSel != null && InvSel != item ) && invSlot_backup == null )
+		if ( item.bInvBar && ( InvSel != null && InvSel != item ) && invSlot_backup == null )
 		{
 			invSlot_backup = item;
 		}
@@ -127,10 +133,38 @@ class MetaDoomPlayer : PlayerPawn
 		Inventory save = InvSel;
 		if ( !invSlot_backup ) invSlot_backup = GetInvThatIsNotThis(InvSel);
 		if ( !invSlot_backup ) return;
-		Console.Printf(""..invSlot_backup.GetClassName());
 		InvSel = invSlot_backup;
 		invSlot_backup = save;
 		A_StartSound("inventory/swap", 15);
+	}
+	
+	void QuickMelee()
+	{
+		if ( player.WeaponState & WF_DISABLESWITCH ) return;
+		if ( !(player.WeaponState & WF_WEAPONREADY) ) return;
+		if ( melee_state != 0 ) return;
+		let daWeapon = MetaDoomMeleeWeapon(PickWeapon(1, false));
+		if ( !daWeapon ) return;
+		
+		if ( !daWeapon.CanUseChargeAttack() )
+		{
+			player.mo.A_StartSound(daWeapon.failsound, 13);
+			player.mo.A_Log("No fuel for that shit");
+			return;
+		}
+		
+		daWeapon.UseUpCharge();
+		
+		melee_state = 1;
+		melee_prevWeapon = player.ReadyWeapon;
+		player.PendingWeapon = daWeapon;
+		player.FindPSprite(PSP_WEAPON).SetState(player.ReadyWeapon.resolveState("QuickMelee.SwapOut"));
+	}
+	
+	void UnMelee()
+	{
+		//melee_state = 0;
+		player.PendingWeapon = melee_prevWeapon;
 	}
 	
 	States
@@ -465,6 +499,7 @@ class MetaDoomPlayer : PlayerPawn
 			{
 				A_SetViewPitch(0, SPF_INTERPOLATE);
 				A_SetViewRoll(0, SPF_INTERPOLATE);
+				A_SetViewAngle(0, SPF_INTERPOLATE);
 				recoil_info.Destroy();
 				recoil_tics = 0;
 			}
@@ -477,12 +512,21 @@ class MetaDoomPlayer : PlayerPawn
 				}
 				else
 				{
-					amt = 1.0 - (recoil_tics-recoil_info.tics_in) / double((recoil_info.tics_out-recoil_info.tics_in)+1);
+					amt = 1.0 - ((recoil_tics-recoil_info.tics_in) / double(recoil_info.tics_out));
+					//amt = 1.0 - (recoil_tics-recoil_info.tics_in) / double((recoil_info.tics_out-recoil_info.tics_in)+1);
 				}
+				
 				double newPitch = -recoil_info.pitch;
 				newPitch += sin(level.maptime * recoil_info.pitch_speed) * recoil_info.pitch_shake;
+				
 				A_SetViewPitch(newPitch * EaseInOutSine(amt), SPF_INTERPOLATE);
-				A_SetViewRoll((sin(level.maptime*recoil_info.roll_speed)*recoil_info.roll_shake) * EaseInOutSine(amt), SPF_INTERPOLATE);
+				
+				double newRoll = recoil_info.roll + (sin(level.maptime*recoil_info.roll_speed)*recoil_info.roll_shake);
+				A_SetViewRoll(newRoll * EaseInOutSine(amt), SPF_INTERPOLATE);
+				
+				double newAngle = recoil_info.yaw + (sin(level.maptime*recoil_info.yaw_speed)*recoil_info.yaw_shake);
+				A_SetViewAngle(newAngle * EaseInOutSine(amt), SPF_INTERPOLATE);
+				
 				recoil_tics++;
 			}
 		}
@@ -490,6 +534,7 @@ class MetaDoomPlayer : PlayerPawn
 		{
 			A_SetViewPitch(0, SPF_INTERPOLATE);
 			A_SetViewRoll(0, SPF_INTERPOLATE);
+			A_SetViewAngle(0, SPF_INTERPOLATE);
 			recoil_tics = 0;
 		}
 		
@@ -795,6 +840,52 @@ class MetaDoomPlayer : PlayerPawn
 		
 		// [Py] init weapon slots
 		weaponSave.Reserve(12);
+	}
+	
+	override void TickPSprites()
+	{
+		let player = self.player;
+		let pspr = player.psprites;
+		while (pspr)
+		{
+			// Destroy the psprite if it's from a weapon that isn't currently selected by the player
+			// or if it's from an inventory item that the player no longer owns. 
+			if ( pspr.ID == PSP_METAINV )
+			{
+				pspr.Tick();
+			}
+			else if ((pspr.Caller == null ||
+				(pspr.Caller is "Inventory" && Inventory(pspr.Caller).Owner != pspr.Owner.mo) ||
+				(pspr.Caller is "Weapon" && pspr.Caller != pspr.Owner.ReadyWeapon)))
+			{
+				pspr.Destroy();
+			}
+			else
+			{
+				pspr.Tick();
+			}
+
+			pspr = pspr.Next;
+		}
+
+		if ((health > 0) || (player.ReadyWeapon != null && !player.ReadyWeapon.bNoDeathInput))
+		{
+			if (player.ReadyWeapon == null)
+			{
+				if (player.PendingWeapon != WP_NOCHANGE)
+					player.mo.BringUpWeapon();
+			}
+			else
+			{
+				CheckWeaponChange();
+				if (player.WeaponState & (WF_WEAPONREADY | WF_WEAPONREADYALT))
+				{
+					CheckWeaponFire();
+				}
+				// Check custom buttons
+				CheckWeaponButtons();
+			}
+		}
 	}
 	
 	override void CheckJump()

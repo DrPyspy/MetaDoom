@@ -119,32 +119,6 @@ Class MetaDoomWeapon : Weapon
 	DeathGibbed:
 		TNT1 A -1;
 		loop;
-	MeleePunch:
-		TNT1 A 0 
-		{
-			A_ClearOverlays();
-			A_OverlayScale(PSP_WEAPON, 1, 1);
-		}
-		PNCH A 0 A_JumpIfInventory("PowerMetaBerserkTimer", 1, "MeleePunchBerserk");
-		PNCH A 0 A_JumpIfInventory("PowerStrength", 1, "MeleePunchBerserk");
-		PNCH A 1 
-		{
-			A_PlaySound("weapons/melee/wiff");
-			
-			if (CountInv("PowerMetaDamage") > 0)
-			{
-				A_PlaySound("powerups/quad/use", CHAN_5);
-			}
-		}
-		PNCH BD 1; //PNCH BCDE 1 
-		PNCH F 1 A_CustomPunch(5 * random(1, 5), TRUE, CPF_NOTURN,"MetaMeleePuff",80,0,0,"BasicArmorBonus","weapons/melee/hit");
-		PNCH GHI 1;
-		PNCH I 5;
-		PNCH H 0 A_PlaySound("weapons/swap");
-		PNCH HGFDB 1; //PNCH HGFEDCBA 1
-		TNT1 A 0 Offset(0,90) A_TakeInventory("MeleePunch", 999);
-		TNT1 A 0 Offset(0,90) A_Jump(256, "Select");
-		stop;
 	MeleePunchBerserk:
 		TNT1 A 0 
 		{
@@ -176,6 +150,34 @@ Class MetaDoomWeapon : Weapon
 		TNT1 A 1 A_WeaponOffset(0,32,WOF_INTERPOLATE);
 		TNT1 A -1;
 		stop;
+		
+		QuickMelee.SwapIn:
+			//"----" A 1 A_WeaponOffset(0, 48, WOF_INTERPOLATE);
+			//"----" A 1 A_WeaponOffset(0, 36, WOF_INTERPOLATE);
+			TNT1 A 1
+			{
+				A_WeaponOffset(0, 32, WOF_INTERPOLATE);
+				return resolveState("QuickMelee");
+			}
+			Wait;
+		QuickMelee.SwapOut:
+			"----" A 1 A_WeaponOffset(0, 36, WOF_INTERPOLATE);
+			"----" A 1 A_WeaponOffset(0, 43, WOF_INTERPOLATE);
+			"----" A 1 A_WeaponOffset(0, 57, WOF_INTERPOLATE);
+			"----" A 1 A_WeaponOffset(0, 120, WOF_INTERPOLATE);
+			"----" A 1 A_Lower();
+			Wait;
+	}
+	
+	action State A_JumpIfQuickMelee(StateLabel jumpbert, bool deselect = true)
+	{
+		let plr = MetaDoomPlayer(invoker.owner);
+		if ( plr && plr.melee_prevWeapon )
+		{
+			plr.UnMelee();
+			return resolveState(jumpbert);
+		}
+		return resolveState(null);
 	}
 	
 	// Smooth Raise and Lower code by Boondorl
@@ -258,6 +260,103 @@ Class MetaDoomWeapon : Weapon
 		{
 			plr.DoViewRecoil(recoilData);
 		}
+	}
+	
+	override State GetUpState ()
+	{
+		let plr = MetaDoomPlayer(owner);
+		if ( plr )
+		{
+			if ( plr.melee_state == 1 )
+			{
+				plr.melee_state = 2;
+				return FindState('QuickMelee.SwapIn');
+			}
+			else if ( plr.melee_state == 2 )
+			{
+				plr.melee_state = 0;
+				plr.melee_prevWeapon = null;
+				plr.player.FindPSprite(PSP_WEAPON).x = 0;
+				return FindState('Select');
+			}
+		}
+		return FindState('Select');
+	}
+}
+
+Class MetaDoomMeleeWeapon : MetaDoomWeapon
+{
+	int charges;
+	int chargeAmount;
+	int chargeTime;
+	int maxCharges;
+	
+	string failSound;
+	property FailSound : failsound;
+	property MaxCharges : maxCharges;
+	property ChargeTime : chargeTime;
+	
+	Default
+	{
+		MetaDoomMeleeWeapon.MaxCharges 1;
+		MetaDoomMeleeWeapon.ChargeTime 245;
+	}
+	
+	override void PostBeginPlay()
+	{
+		super.PostBeginPlay();
+		charges = maxCharges;
+	}
+	
+	override void Tick()
+	{
+		super.Tick();
+		if ( charges < maxCharges )
+		{
+			chargeAmount += 1;
+			if ( chargeAmount >= chargeTime )
+			{
+				chargeAmount = 0;
+				charges += 1;
+			}
+		}
+	}
+	
+	clearscope double GetChargePercent()
+	{
+		return (chargeAmount / double(chargeTime));
+	}
+	
+	void UseUpCharge(int amount = 1)
+	{
+		charges = max(0, charges-amount);
+	}
+	
+	bool CanUseChargeAttack()
+	{
+		return charges > 0;
+	}
+	
+	string GetFailSound()
+	{
+		return failSound;
+	}
+	
+	State TryChargeAttack()
+	{
+		if ( CanUseChargeAttack() ) return resolveState("AltFire");
+		return resolveState("ChargeFail");
+	}
+	
+	States
+	{
+		ChargeFail:
+			"----" AAA 1 A_WeaponOffset(GetShake(), 32, WOF_INTERPOLATE);
+			"----" A 1
+			{
+				return resolveState("Ready");
+			}
+			Wait;
 	}
 }
 

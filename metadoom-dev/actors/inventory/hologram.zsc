@@ -6,7 +6,7 @@ Holograms
 ----------------------------
 */
 
-class HologramPickup : CustomInventory
+Class HologramPickup : CustomInventory
 {
 	Default
 	{
@@ -38,7 +38,7 @@ class HologramPickup : CustomInventory
 	}
 }
 
-class Hologram : CustomInventory
+class Hologram : MetaEquipmentBase
 {
 	Default
 	{
@@ -50,25 +50,20 @@ class Hologram : CustomInventory
 		inventory.maxamount 1;
 		+INVENTORY.INVBAR
 		scale 0.5;
+		
+		MetaEquipmentBase.CooldownTime INV_COOLDOWN_HOLOGRAM;
 	}
 	
-	states
+	States
 	{
-	Spawn:
-		HOLO Z -1;
-		stop;
-	Use:
-		TNT1 A 0
-		{
-			if (CountInv("InventoryFuel_Hologram") >= INV_COOLDOWN_HOLOGRAM)
-			{
-				A_FireProjectile("HologramProj",0,0,0,0,FPF_TRANSFERTRANSLATION); //A_SpawnItemEx("HologramSam",32,0,8,0,0,0,0,SXF_TRANSFERTRANSLATION)
-				A_TakeInventory("InventoryFuel_Hologram", 999);
-			} else {
-				A_PlaySound("menu/invalid");
-			}
-		}
-		fail;
+		Spawn:
+			HOLO Z -1;
+			stop;
+	}
+	
+	override void UseEquipment()
+	{
+		ThrowProjectile("HologramProj");
 	}
 }
 

@@ -39,6 +39,17 @@ weapons/chainsaw/slash		csawslsh
 weapons/chainsaw/slashhit	csawwack
 weapons/chainsaw/off		csawoff
 
+$random weapons/chainsaw/slice
+{
+	weapons/chainsaw/slice1 weapons/chainsaw/slice2 weapons/chainsaw/slice3 weapons/chainsaw/slice4
+}
+weapons/chainsaw/slice1 "sounds/weapons/chainsaw/chainsaw_slice1.ogg"
+weapons/chainsaw/slice2 "sounds/weapons/chainsaw/chainsaw_slice2.ogg"
+weapons/chainsaw/slice3 "sounds/weapons/chainsaw/chainsaw_slice3.ogg"
+weapons/chainsaw/slice4 "sounds/weapons/chainsaw/chainsaw_slice4.ogg"
+
+weapons/chainsaw/empty "sounds/weapons/chainsaw/chainsaw_outofammo.ogg"
+
 // pistol
 weapons/pistol/use			pistuse
 weapons/pistol/fire			pistfire

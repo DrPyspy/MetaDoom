@@ -8,6 +8,94 @@ Omni Event Handler
 
 // Handles most event-related things.
 
+Class MetaDoom_ShaderInfo
+{
+	string shaderName;
+	bool active;
+	Class<Inventory> check;
+	double amount;
+}// Classes relating to running the game
+
+Class MetaDoom_GameBrain : Thinker
+{
+	int maps_cleared;
+	
+	bool is_episodic;
+	
+	MetaDoom_GameBrain Init()
+	{
+		ChangeStatNum(STAT_STATIC);
+		return self;
+	}
+
+	static MetaDoom_GameBrain Get()
+	{
+		ThinkerIterator it = ThinkerIterator.Create("MetaDoom_GameBrain", STAT_STATIC); 
+		let brain = MetaDoom_GameBrain(it.Next());
+		
+		if ( !brain )
+		{
+			brain = new("MetaDoom_GameBrain").Init();
+		}
+		return brain;
+	}
+	
+	bool IsEpisodic()
+	{
+		return is_episodic;
+	}
+	
+	int GetMapsCleared()
+	{
+		return maps_cleared;
+	}
+}
+
+Class Meta_StaticEventHandler : EventHandler
+{
+	Array<MetaDoom_ShaderInfo> shaders;
+	
+	override void OnRegister()
+	{
+		MetaDoom_ShaderInfo shader;
+		
+		shader = new("MetaDoom_ShaderInfo");
+		shader.shaderName = "MetaDoom_HellTime";
+		shader.check = "MetaArtifact_IsActive";
+		shaders.Push(shader);
+	}
+	
+	// COOL SHADER SHITE
+	
+	ui double lastMS;
+	
+	override void UiTick()
+	{
+		double time_diff = MSTimeF() - lastMS;
+		lastMS = MSTimeF();
+		
+		double deltatime = time_diff / (1000. / 60.);
+		
+		let player = players[consoleplayer].mo;
+		
+		for ( int i = 0; i < shaders.Size(); i++ )
+		{
+			if ( player && player.CountInv(shaders[i].check) > 0 )
+			{
+				shaders[i].amount += deltatime*0.1;
+			}
+			else
+			{
+				shaders[i].amount -= deltatime*0.1;
+			}
+			shaders[i].amount = clamp(shaders[i].amount, 0.0, 1.0);
+			PPShader.SetEnabled(shaders[i].shaderName, shaders[i].amount > 0.0);
+			PPShader.SetUniform1f(shaders[i].shaderName, "md_timer", MSTimeF()/1000.);
+			PPShader.SetUniform1f(shaders[i].shaderName, "md_amount", shaders[i].amount);
+		}
+	}
+}
+
 Class Meta_OmniEventHandler : EventHandler
 {
 	bool Meta_ThingExists(name clsname)
@@ -21,7 +109,35 @@ Class Meta_OmniEventHandler : EventHandler
 
 		return true;
 	}
-	override void WorldThingDied(WorldEvent e)
+	
+	override void WorldLoaded(WorldEvent e)
+	{
+		let brain = MetaDoom_GameBrain.Get();
+		if ( _metadebug_forcemaps >= 0 )
+		{
+			brain.maps_cleared = _metadebug_forcemaps;
+		}
+		brain.is_episodic = level.mapname.Left(1) == "E" && ( level.mapname.ByteAt(1) >= 48 && level.mapname.ByteAt(1) < 58 );
+		//Console.Printf("Is Episodic: "..brain.is_episodic);
+	}
+	
+	override void WorldUnloaded(WorldEvent e)
+	{
+		let brain = MetaDoom_GameBrain.Get();
+		brain.maps_cleared += 1;
+	}
+	
+	/*override void CheckReplacee (ReplacedEvent e)
+	{
+		let metaMonster = MonsterCore(GetDefaultByType(e.Replacement));
+		if ( metaMonster )
+		{
+			Console.Printf(""..metaMonster.replacee);
+			e.Replacee = metaMonster.replacee;
+		}
+	}*/
+	
+	override void WorldThingDied (WorldEvent e)
 	{
 		if ( e.Thing.target==null||!(e.Thing.target is "PlayerPawn") )
 		{
@@ -45,7 +161,7 @@ Class Meta_OmniEventHandler : EventHandler
 		{
 			return;
 		}*/
-		if(!multiplayer && level.maptime%35==0)
+		/*if(!multiplayer && level.maptime%35==0)
 		{
 			if(players[consoleplayer].mo.FindInventory("MetaBerserkFist"))
 			{
@@ -79,7 +195,7 @@ Class Meta_OmniEventHandler : EventHandler
 			{
 				players[consoleplayer].mo.GiveInventory("MetaCodex_Backpack2",1);
 			}
-		}
+		}*/
 	}
 	
 	override void NetworkProcess (ConsoleEvent e)
@@ -96,6 +212,13 @@ Class Meta_OmniEventHandler : EventHandler
 		if ( cmds[1] ~== "swapinv" )
 		{
 			MetaDoomPlayer(player.mo).SwapInventory();
+			return;
+		}
+		
+		if ( cmds[1] ~== "quickmelee" )
+		{
+			MetaDoomPlayer(player.mo).QuickMelee();
+			return;
 		}
 	}
 }

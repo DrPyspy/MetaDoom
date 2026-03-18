@@ -39,7 +39,7 @@ class DogCollarPickup : CustomInventory
 	}
 }
 
-class DogCollar : CustomInventory
+class DogCollar : MetaEquipmentBase
 {
 	Default
 	{
@@ -51,26 +51,20 @@ class DogCollar : CustomInventory
 		inventory.maxamount 1;
 		+INVENTORY.INVBAR
 		scale 0.5;
+		
+		MetaEquipmentBase.CooldownTime INV_COOLDOWN_GENERIC;
 	}
 	
-	states
+	States
 	{
-	Spawn:
-		DOGC Z -1;
-		stop;
-	Use:
-		TNT1 A 0
-		{
-			if (CountInv("InventoryFuel_DogCollar") >= INV_COOLDOWN_GENERIC)
-			{
-				A_PlaySound("inventory/dogcollar/toss");
-				A_FireProjectile("DogCollarProj",0,0);
-				A_TakeInventory("InventoryFuel_DogCollar", 999);
-			} else {
-				A_PlaySound("menu/invalid");
-			}
-		}
-		fail;
+		Spawn:
+			DOGC Z -1;
+			stop;
+	}
+	override void UseEquipment()
+	{
+		owner.A_StartSound("inventory/dogcollar/toss", CHAN_WEAPON);
+		ThrowProjectile("DogCollarProj");
 	}
 }
 

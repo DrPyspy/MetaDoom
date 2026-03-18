@@ -62,8 +62,8 @@ inventory/kineticmine/arm			kminarm
 
 // Artifact
 inventory/artifact/get				artiget
-inventory/artifact/on				artion
-inventory/artifact/off				artioff
+inventory/artifact/on "sounds/inventory/artifact/artifact_on.ogg"
+inventory/artifact/off "sounds/inventory/artifact/artifact_off.ogg"
 
 // Flame Belch
 inventory/flamebelch/get 			getfblch
@@ -73,12 +73,13 @@ inventory/flamebelch/fire1 			fblch1
 inventory/flamebelch/fire2 			fblch2
 inventory/flamebelch/fire3 			fblch3
 
-$random inventory/flamebelch/crak { inventory/flamebelch/crak1 inventory/flamebelch/crak2 inventory/flamebelch/crak3 inventory/flamebelch/crak4 }
-$limit inventory/flamebelch/crak 8
+$random inventory/flamebelch/crak { inventory/flamebelch/crak1 inventory/flamebelch/crak2 inventory/flamebelch/crak3 inventory/flamebelch/crak4 inventory/flamebelch/crak5 }
+$limit inventory/flamebelch/crak 0
 
-inventory/flamebelch/crak1		flamcrk1
-inventory/flamebelch/crak2		flamcrk2
-inventory/flamebelch/crak3		flamcrk3
-inventory/flamebelch/crak4		flamcrk4
+inventory/flamebelch/crak1 "sounds/inventory/flamebelch/flameburn_1.ogg"
+inventory/flamebelch/crak2 "sounds/inventory/flamebelch/flameburn_2.ogg"
+inventory/flamebelch/crak3 "sounds/inventory/flamebelch/flameburn_3.ogg"
+inventory/flamebelch/crak4 "sounds/inventory/flamebelch/flameburn_4.ogg"
+inventory/flamebelch/crak5 "sounds/inventory/flamebelch/flameburn_5.ogg"
 
 inventory/flamebelch/sizzle		flamsizl

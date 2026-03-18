@@ -49,6 +49,9 @@ const HOLY_SCAREDTIME = 30;
 	
 class MonsterCore : Actor
 {
+	Class<Actor> replacee;
+	property replacee : Replacee;
+	
 	Default
 	{
 		painchance "Fist", 255;
@@ -65,6 +68,16 @@ class MonsterCore : Actor
 		painchance "DogCollar", 0;
 		bloodcolor "ff 00 00";
 		MonsterCore.CanBeScared true;
+	}
+	
+	MetaBossSpawner bossTracker;
+	
+	action void A_MetaBossDeath()
+	{
+		if ( invoker.bossTracker )
+		{
+			invoker.bossTracker.StopIt();
+		}
 	}
 	
 	// Part of A_CheckLanding
@@ -352,6 +365,14 @@ class MonsterCore : Actor
 		}
 	}
 	
+	static void SpawnMetaPinata (Actor source, Class<Actor> spawntype, int spawnamount)
+	{
+		for ( int i = spawnamount; i > 0; i-- )
+		{
+			source.A_SpawnItemEx(spawntype,0,0,32,random(0,8),0,random(0,8),random(0,360));
+		}
+	}
+	
 	// Do things that should happen every single gametic.
 	override void Tick()
 	{
@@ -488,7 +509,7 @@ class MonsterCore : Actor
 		
 		// If on fire, spawn some Armor
 		// Based on Shadsy's Mega Imp code from Reelism 2
-		if (CountInv("MetaBurnDOT") && mod != "Fire")
+		/*if (CountInv("MetaBurnDOT") && mod != "Fire")
 		{
 			int twiddle;
 			
@@ -503,7 +524,7 @@ class MonsterCore : Actor
 			{
 				A_SpawnItemEx("MetaArmorPinataFade",random(0,radius/2),random(0,radius/2),random(16,height),random(2,8),0,random(4,8),random(0,365),SXF_NOCHECKPOSITION);
 			}
-		}
+		}*/
 		
 		return Super.DamageMobj(inflictor, source, damage, mod, flags, angle);
 	}
@@ -511,7 +532,7 @@ class MonsterCore : Actor
 	override void Die(Actor source, Actor inflictor, int dmgflags, Name MeansOfDeath)
 	{
 		// If on fire when killed, spawn some Armor
-		if (CountInv("MetaBurnDOT"))
+		/*if (CountInv("MetaBurnDOT"))
 		{
 			int twiddle;
 			
@@ -529,7 +550,7 @@ class MonsterCore : Actor
 			{
 				A_SpawnItemEx("MetaArmorPinataFade",random(0,radius/2),random(0,radius/2),random(16,height),random(2,8),0,random(4,8),random(0,365),SXF_NOCHECKPOSITION);
 			}
-		}
+		}*/
 		
 		Super.Die(source,inflictor,dmgflags,MeansOfDeath);
 	}

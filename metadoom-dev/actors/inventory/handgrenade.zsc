@@ -6,7 +6,7 @@ Hand Grenade
 ----------------------------
 */
 
-class HandGrenadePickup : CustomInventory
+Class HandGrenadePickup : CustomInventory
 {
 	Default
 	{
@@ -38,7 +38,65 @@ class HandGrenadePickup : CustomInventory
 	}
 }
 
-class HandGrenade : CustomInventory
+Class MetaEquipmentBase : Inventory
+{
+	int cooldowntime;
+	
+	int eq_cooldown;
+	string eq_refillSound;
+	
+	property CooldownTime : eq_cooldown;
+	property RefillSound : eq_refillSound;
+	
+	override bool Use (bool pickup)
+	{
+		if ( !owner ) return false;
+		
+		if ( cooldowntime <= 0 )
+		{
+			cooldowntime = eq_cooldown;
+			UseEquipment();
+		}
+		else
+		{
+			A_PlaySound("menu/invalid");
+		}
+		return false;
+	}
+	
+	clearscope int, int GetCooldownVals()
+	{
+		return eq_cooldown-cooldowntime, eq_cooldown;
+	}
+	
+	virtual void UseEquipment()
+	{
+	}
+	
+	void ThrowProjectile(Class<Actor> projClass, int pitch = 15)
+	{
+		let proj = Spawn(projClass);
+		proj.target = owner;
+		proj.angle = owner.angle;
+		proj.SetOrigin(owner.pos + (0,0,32), false);
+		proj.Vel3DFromAngle(proj.speed, owner.angle, owner.pitch-pitch);
+	}
+	
+	override void Tick()
+	{
+		super.Tick();
+		if ( cooldowntime > 0 )
+		{
+			cooldowntime--;
+			if ( cooldowntime <= 0 )
+			{
+				owner.A_PlaySound("inventory/refresh", 20);
+			}
+		}
+	}
+}
+
+Class HandGrenade : MetaEquipmentBase
 {
 	Default
 	{
@@ -50,25 +108,20 @@ class HandGrenade : CustomInventory
 		inventory.maxamount 1;
 		+INVENTORY.INVBAR
 		scale 0.5;
+		
+		MetaEquipmentBase.CooldownTime INV_COOLDOWN_GENERIC;
 	}
 	
-	states
+	States
 	{
-	Spawn:
-		HGRE Z -1;
-		stop;
-	Use:
-		TNT1 A 0
-		{
-			if (CountInv("InventoryFuel_HandGrenade") >= INV_COOLDOWN_GENERIC)
-			{
-				A_FireProjectile("HandGrenadeProj",0,0);
-				A_TakeInventory("InventoryFuel_HandGrenade", 999);
-			} else {
-				A_PlaySound("menu/invalid");
-			}
-		}
-		fail;
+		Spawn:
+			HGRE Z -1;
+			stop;
+	}
+	
+	override void UseEquipment()
+	{
+		ThrowProjectile("HandGrenadeProj");
 	}
 }
 
@@ -107,7 +160,7 @@ class HandGrenadeProj : Actor
 		TNT1 A 0;
 		TNT1 A 0 
 		{
-			ThrustThingZ(0,35,0,1);
+			//ThrustThingZ(0,35,0,1);
 			A_PlaySound("weapons/grenadethrow");
 			user_timer = 0;
 		}

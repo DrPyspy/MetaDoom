@@ -6,7 +6,7 @@
 addkeysection "$MNU_MDHEADER" MetaDoomActions
 
 addmenukey "$MNU_MDMELEE" metadoom_melee
-alias metadoom_melee "pukename MeleePunch"
+alias metadoom_melee "netevent metadoom:quickmelee"
 defaultbind F metadoom_melee
 
 addmenukey "supar wepon" metadoom_qs_super

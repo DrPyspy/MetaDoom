@@ -37,7 +37,7 @@ class ArtifactPickup : CustomInventory
 	}
 }
 
-class Artifact : CustomInventory
+class Artifact : MetaEquipmentBase
 {
 	Default
 	{
@@ -52,26 +52,86 @@ class Artifact : CustomInventory
 		+FLOATBOB
 	}
 	
-	states
+	bool artiActive;
+	int artiTimer;
+	
+	double artiAmount;
+	
+	override void UseEquipment()
 	{
-	Spawn:
-		ARTI ZYXY 10;
-		loop;
-	Use:
-		TNT1 A 0
+		owner.A_StartSound("inventory/artifact/on", 67, CHANF_OVERLAP);
+		owner.A_SetBlend("#FFFFFF", 0.1, 35);
+		artiActive = true;
+		artiTimer = 175;
+		int freezemask;
+		freezemask = 1 << Owner.PlayerNumber();
+		Owner.player.timefreezer |= freezemask;
+		for (int i = 0; i < MAXPLAYERS; i++)
 		{
-			if (CountInv("InventoryFuel_TheArtifact") >= INV_COOLDOWN_ARTIFACT)
+			if (playeringame[i] &&
+				players[i].mo != null &&
+				players[i].mo.IsTeammate(Owner)
+			   )
 			{
-				A_PlaySound("inventory/artifact/on");
-				A_GiveInventory("ArtifactTimer", 175);
-				A_TakeInventory("InventoryFuel_TheArtifact", 999);
-			} else {
-				A_PlaySound("menu/invalid");
+				players[i].timefreezer |= freezemask;
+				players[i].mo.GiveInventory("MetaArtifact_IsActive", 1);
 			}
 		}
-		fail;
+	}
+	
+	override void DoEffect()
+	{
+		if ( !artiActive ) return;
+		
+		artiTimer--;
+		
+		if ( artiTimer == 88 )
+		{
+			owner.A_StartSound("inventory/artifact/off", 67, CHANF_OVERLAP);
+		}
+		
+		if ( artiTimer <= 0 && level.maptime % 2 == 0 )
+		{
+			if (Owner != null && Owner.player != null)
+			{
+				int freezemask = ~(1 << Owner.PlayerNumber());
+				for (int i = 0; i < MAXPLAYERS; ++i)
+				{
+					players[i].timefreezer &= freezemask;
+					if ( !playeringame[i] ) continue;
+					players[i].mo.TakeInventory("MetaArtifact_IsActive", 1);
+				}
+			}
+
+			// Are there any players who still have timefreezer bits set?
+			for (int i = 0; i < MAXPLAYERS; ++i)
+			{
+				if ( playeringame[i] && players[i].timefreezer != 0 )
+				{
+					return;
+				}
+			}
+			
+			artiActive = false;
+			Level.SetFrozen(false);
+			return;
+		}
+		
+		if ( artiActive )
+		{
+			Level.SetFrozen(level.maptime % 3 != 0);
+		}
+	}
+	
+	States
+	{
+		Spawn:
+			ARTI ZYXY 10;
+			loop;
 	}
 }
+
+Class MetaArtifact_IsActive : _Boolean {}
 
 class ArtifactEffect : PowerupGiver
 {

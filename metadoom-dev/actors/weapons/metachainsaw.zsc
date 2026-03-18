@@ -25,7 +25,7 @@ class MetaChainsawPickup : WeaponGiver
 	}
 }
 
-class MetaChainsaw : MetaDoomWeapon
+class MetaChainsaw : MetaDoomMeleeWeapon
 {
 	Default
 	{
@@ -38,12 +38,78 @@ class MetaChainsaw : MetaDoomWeapon
 		Tag "$TAG_CHAINSAW";
 		+WEAPON.MELEEWEAPON		
 		Inventory.PickupSound "weapons/chainsaw/get";
-		Weapon.YAdjust 10;
+		MetaDoomMeleeWeapon.FailSound "weapons/chainsaw/empty";
+		//Weapon.YAdjust 10;
 		Weapon.UpSound "weapons/chainsaw/use";
 		//$Category "Weapons/MetaDoom"
 		//$Title "Chainsaw"
 		//$NotAngled
 		//$Color 14
+	}
+	
+	const SAW_DIST = 48;
+	
+	Vector2 windup_start;
+	int windup;
+	
+	action void A_MetaChainsaw()
+	{
+		A_PlaySound ("weapons/chainsaw/attack", CHAN_WEAPON, 1.0, 1);
+		
+		if (CountInv("PowerMetaDamage") > 0)
+		{
+			A_PlaySound("powerups/quad/use", CHAN_5);
+		}
+		
+		FTranslatedLineTarget t;
+
+		if (player == null)
+		{
+			return;
+		}
+		
+		int damage = 2 * random[Saw](1, 10);
+		int range = MeleeRange + MELEEDELTA + (1. / 65536.);
+
+		double ang = angle + 2.8125 * (Random2[Saw]() / 255.);
+		double slope = AimLineAttack (ang, range, t) + 0 * (Random2[Saw]() / 255.);
+
+		Actor puff;
+		int actualdamage;
+		[puff, actualdamage] = LineAttack (ang, range, slope, damage, 'Melee', null, LAF_NORANDOMPUFFZ, t);
+
+		if ( !t.linetarget )
+		{
+			return;
+		}
+		t.linetarget.A_StartSound("weapons/chainsaw/slice", 10, CHANF_OVERLAP, pitch:frandom(0.95,1.05), volume: frandom(0.3,0.35));
+
+		A_StartSound("weapons/chainsaw/attackhit", CHAN_WEAPON);
+			
+		// turn to face target
+		double anglediff = deltaangle(angle, t.angleFromSource);
+
+		if (anglediff < 0.0)
+		{
+			if (anglediff < -4.5)
+				angle = t.angleFromSource + 90.0 / 21;
+			else
+				angle -= 4.5;
+		}
+		else
+		{
+			if (anglediff > 4.5)
+				angle = t.angleFromSource - 90.0 / 21;
+			else
+				angle += 4.5;
+		}
+	}
+	
+	action void A_MetaChainsawSlash (double angle)
+	{
+		let proj = A_FireProjectile("ChainsawSlash", angle, 0, 0, 0, FPF_NOAUTOAIM);
+		if ( !proj ) return;
+		proj.vel += invoker.owner.vel;
 	}
 	
 	States
@@ -58,55 +124,112 @@ class MetaChainsaw : MetaDoomWeapon
 		}
 		Loop;
 	Deselect:
-		WSAW A 0;
-		WSAW A 0 A_JumpIf(health <= 0, "DeadDude");
-		WSAW A 0 A_PlaySound("weapons/chainsaw/off", CHAN_WEAPON);
+		"----" A 0;
+		"----" A 0 A_JumpIf(health <= 0, "DeadDude");
+		"----" A 0 A_PlaySound("weapons/chainsaw/off", CHAN_WEAPON);
 	FinishDeselect:
-		WSAW A 1 A_SmoothLower();
+		"----" A 1 A_SmoothLower();
 		Loop;
 	Select:
 		WSAW A 0 A_OverlayScale(PSP_WEAPON, 1, 1);
 		WSAW AB 1 A_SmoothRaise();
 		loop;
 	Fire:
-		WSAW C 0 
+		WSAW A 0
 		{
-			A_PlaySound ("weapons/chainsaw/attack", CHAN_WEAPON, 1.0, 1);
-			A_Saw ("null","weapons/chainsaw/attackhit");
-			
-			if (CountInv("PowerMetaDamage") > 0)
-			{
-				A_PlaySound("powerups/quad/use", CHAN_5);
-			}
+			A_MetaChainsaw();
+			A_WeaponOffset(0,42);
 		}
-		WSAW CDCD 1 A_WeaponOffset(random(-4,4),random(31,34),WOF_INTERPOLATE);
-		WSAW C 0 A_ReFire;
+		WSAW C 1 A_WeaponOffset(0, 38, WOF_INTERPOLATE);
+		WSAW D 1 A_WeaponOffset(0, 35, WOF_INTERPOLATE);
+		WSAW C 1 A_WeaponOffset(0, 33, WOF_INTERPOLATE);
+		WSAW D 1 A_WeaponOffset(0, 32, WOF_INTERPOLATE);
+		WSAW C 0 A_ReFire("FireLoop");
+		Goto FireEnd;
+	FireLoop:
+		WSAW A 0 A_MetaChainsaw();
+		WSAW CDCD 1 A_WeaponOffset(frandom(-4,4),random(31,34),WOF_INTERPOLATE);
+		WSAW C 0 A_ReFire("FireLoop");
+		Goto FireEnd;
+	FireEnd:
+		WSAW A 0
+		{
+			A_WeaponOffset(0,22);
+		}
+		WSAW A 1 A_WeaponOffset(0, 25, WOF_INTERPOLATE);
+		WSAW B 1 A_WeaponOffset(0, 29, WOF_INTERPOLATE);
+		WSAW A 1 A_WeaponOffset(0, 31, WOF_INTERPOLATE);
+		WSAW B 1 A_WeaponOffset(0, 32, WOF_INTERPOLATE);
 		Goto Ready;
 	AltFire:
-		WSAW A 1 A_WeaponOffset(0,35,WOF_INTERPOLATE);
-		WSAW B 1 A_WeaponOffset(0,37,WOF_INTERPOLATE);
-		WSAW A 1 A_WeaponOffset(0,40,WOF_INTERPOLATE);
-		WSAW B 1 A_WeaponOffset(0,50,WOF_INTERPOLATE);
-		WSAW A 3 A_WeaponOffset(0,60,WOF_INTERPOLATE);
+		WSAW A 0
+		{
+			A_WeaponOffset(0, 32, WOF_INTERPOLATE);
+			invoker.windup_start = (0,32);
+		}
+		Goto WindUp;
+	QuickMelee:
+		/*WSAW A 0
+		{
+			A_WeaponOffset(0, 140, WOF_INTERPOLATE);
+			invoker.windup_start = (0,120);
+		}*/
+		Goto AltFireFinish;
+	WindUp:
+		WSAW A 0
+		{
+			invoker.windup = 0;
+			
+			let recoil = new("Meta_RecoilInfo");
+			recoil.tics_in = 3;
+			recoil.tics_out = 3;
+			recoil.yaw = 0.5;
+			recoil.roll = 0.15;
+			A_MetaRecoil(recoil);
+		}
+		WSAW ABAB 1
+		{
+			double progress = (invoker.windup/4.);
+			progress = progress * progress * progress;
+			double x = invoker.windup_start.x + ( -400 - invoker.windup_start.x ) * progress;
+			double y = invoker.windup_start.y + ( -32 - invoker.windup_start.y ) * progress;
+			
+			A_WeaponOffset(x, y, WOF_INTERPOLATE);
+			invoker.windup += 1;
+		}
+		Goto AltFireFinish;
+	AltFireFinish:
 		WSAW H 1 
 		{
-			A_WeaponOffset(0,32);
 			A_StopSound(CHAN_WEAPON);
-			A_PlaySound ("weapons/chainsaw/slash", CHAN_BODY);
+			A_StartSound("weapons/chainsaw/slash", CHAN_BODY, pitch:frandom(0.98,1.02));
 			
 			if (CountInv("PowerMetaDamage") > 0)
 			{
 				A_PlaySound("powerups/quad/use", CHAN_5);
 			}
 			
+			let recoil = new("Meta_RecoilInfo");
+			recoil.tics_in = 3;
+			recoil.tics_out = 15;
+			recoil.yaw = -0.5;
+			recoil.roll = -0.15;
+			recoil.roll_speed = random(30,35);
+			recoil.roll_shake = 0.05;
+			A_MetaRecoil(recoil);
+			
+			A_Overlay(135, "Overlay.QuickMeleeOffset");
 		}
-		WSAW I 1;
-		WSAW J 1 A_FireProjectile("ChainsawSlash", -32, 0, 0, 0, FPF_NOAUTOAIM);
-		WSAW K 1 A_FireProjectile("ChainsawSlash", -16, 0, 0, 0, FPF_NOAUTOAIM);
-		WSAW L 1 A_FireProjectile("ChainsawSlash", 0, 0, 0, 0, FPF_NOAUTOAIM);
-		WSAW M 1 A_FireProjectile("ChainsawSlash", 16, 0, 0, 0, FPF_NOAUTOAIM);
-		WSAW N 1 A_FireProjectile("ChainsawSlash", 32, 0, 0, 0, FPF_NOAUTOAIM);
-		TNT1 A 32 A_WeaponOffset(0,90);
+		WSAW E 1;
+		WSAW E 1 A_MetaChainsawSlash(75);
+		WSAW E 1 A_MetaChainsawSlash(45);
+		WSAW E 1 A_MetaChainsawSlash(22.5);
+		WSAW E 1 A_MetaChainsawSlash(0);
+		WSAW E 1 A_MetaChainsawSlash(-22.5);
+		WSAW E 1 A_MetaChainsawSlash(-45);
+		WSAW E 1 A_MetaChainsawSlash(-75);
+		TNT1 A 22 A_WeaponOffset(0,90);
+		"----" A 0 A_JumpIfQuickMelee("Deselect");
 		WSAW A 1 { A_WeaponOffset(0,90,WOF_INTERPOLATE); A_PlaySound("weapons/chainsaw/get", CHAN_WEAPON); }
 		WSAW B 1 A_WeaponOffset(0,80,WOF_INTERPOLATE);
 		WSAW A 1 A_WeaponOffset(0,70,WOF_INTERPOLATE);
@@ -119,6 +242,17 @@ class MetaChainsaw : MetaDoomWeapon
 		WSAW B 1 A_WeaponOffset(0,33,WOF_INTERPOLATE);
 		WSAW A 1 A_WeaponOffset(0,32,WOF_INTERPOLATE);
 		goto Ready;
+	Overlay.QuickMeleeOffset:
+		TNT1 A 1 A_WeaponOffset(-240.00, 48.00, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(-216.23, 41.06, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(-149.64, 35.49, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(-53.41, 32.40, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(53.41, 32.40, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(149.64, 35.49, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(216.23, 41.06, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(240.00, 48.00, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(216.23, 54.94, WOF_INTERPOLATE);
+		Stop;
 	Melee:
 		WSAW A 1 A_WeaponOffset(0,35,WOF_INTERPOLATE);
 		WSAW B 1 A_WeaponOffset(0,47,WOF_INTERPOLATE);
@@ -194,22 +328,75 @@ class ChainsawSlash : Actor
 	{
 		Radius 13;
 		Height 8;
-		Speed 10;
-		DamageFunction (3 * random(1, 4));
+		Speed 18;
+		//DamageFunction ( 20 + 2 * random(0, 2) );
 		Projectile;
-		+RIPPER
+		//+RIPPER
 		Obituary "$OB_METACHAINSAW_SLASH";
+		RenderStyle "Add";
 		alpha 0.5;
 	}
 	
+	int fullDamage;
+	
+	Array<Actor> hitHistory;
+	bool didHit;
+	
 	States
 	{
-	Spawn:
-		CSLS A 8;
-		stop;
-	Death:
-		TNT1 A 0;
-		Stop;
+		Spawn:
+			CSLS AAAA 1;
+			CSLS AAAA 1 A_FadeOut(0.125);
+			stop;
+		Death:
+			TNT1 A 0;
+			Stop;
+	}
+	
+	override void BeginPlay()
+	{
+		super.BeginPlay();
+		fullDamage = 25;
+	}
+
+	override int SpecialMissileHit(Actor victim)
+	{
+		if ( victim && (!target || victim != target) && victim.bSHOOTABLE && victim.health >= 0 )
+		{
+			if ( hitHistory.Find(victim) == hitHistory.Size() )
+			{
+				Vector3 unitTo = (pos - victim.pos).Unit();
+				victim.DamageMobj(self, target, fullDamage, 'ChainsawSlash');
+				hitHistory.Push(victim);
+				double pitch = (victim.health > 0 ? 0.0 : 0.1) + frandom(0.925,1.075);
+				double volume = victim.health > 0 ? frandom(0.25,0.3) : 0.6;
+				
+				if ( !victim.bCANUSEWALLS )
+				{
+					return MHIT_PASS;
+				}
+				
+				fullDamage = max(1, ceil(fullDamage * 0.75));
+				victim.BloodSplatter(victim.pos + unitTo * victim.radius, angle);
+				
+				victim.A_StartSound("weapons/chainsaw/slice", 10, CHANF_OVERLAP, pitch: pitch, volume: volume);
+				int maxSpawns = max(1, int(victim.GetSpawnHealth()/30.));
+				if ( victim.health <= 0 )
+				{
+					MonsterCore.SpawnMetaPinata(victim, "MetaHealthPinata", maxSpawns);
+				}
+				else if ( level.maptime % 2 == 0 )
+				{
+					MonsterCore.SpawnMetaPinata(victim, "MetaHealthPinata", 1);
+				}
+			}
+			else
+			{
+				victim.TriggerPainChance('ChainsawSlash');
+			}
+		}
+		
+		return MHIT_PASS;
 	}
 }
 

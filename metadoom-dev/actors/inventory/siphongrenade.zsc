@@ -40,7 +40,7 @@ class SiphonGrenadePickup : CustomInventory
 	}
 }
 
-class SiphonGrenade : CustomInventory
+Class SiphonGrenade : MetaEquipmentBase
 {
 	Default
 	{
@@ -52,29 +52,24 @@ class SiphonGrenade : CustomInventory
 		inventory.maxamount 1;
 		+INVENTORY.INVBAR
 		scale 0.5;
+		
+		MetaEquipmentBase.CooldownTime INV_COOLDOWN_SIPHON;
 	}
 	
-	states
+	override void UseEquipment()
 	{
-	Spawn:
-		SIPH Z -1;
-		stop;
-	Use:
-		TNT1 A 0
-		{
-			if (CountInv("InventoryFuel_SiphonGrenade") >= INV_COOLDOWN_SIPHON)
-			{
-				A_FireProjectile("SiphonGrenadeProj",0,0);
-				A_TakeInventory("InventoryFuel_SiphonGrenade", 999);
-			} else {
-				A_PlaySound("menu/invalid");
-			}
-		}
-		fail;
+		ThrowProjectile("SiphonGrenadeProj");
+	}
+	
+	States
+	{
+		Spawn:
+			SIPH Z -1;
+			stop;
 	}
 }
 
-class SiphonGrenadeProj : Actor
+Class SiphonGrenadeProj : Actor
 {
 	Default
 	{
