@@ -65,7 +65,7 @@ class MetaArachnotron : MonsterCore
 		BSPI L 7;
 		BSPI M 7 A_PlaySound("monsters/arachnotron/body");
 		BSPI NO 7;
-		BSPI P -1 A_KillMaster; //A_BossDeath
+		BSPI P -1 A_MetaBossDeath;
 		Stop;
     Raise:
 		BSPI P 0 { bSPRITEFLIP = 0; }
@@ -180,7 +180,7 @@ class MetaSpiborg : MonsterCore
 		2SPI I 5;
 		2SPI J 5;
 		2SPI K 5 A_PlaySound("monsters/arachnotron/body");
-		2SPI L -1 A_KillMaster; //A_BossDeath
+		2SPI L -1 A_MetaBossDeath;
 		Stop;
     Raise:
 		2SPI P 5;
@@ -380,7 +380,7 @@ class MetaTitantula : MonsterCore
 		SCP2 I 7;
 		SCP2 J 7 A_PlaySound("monsters/arachnotron/body");
 		SCP2 K 7;
-		SCP2 L -1 A_KillMaster; //A_BossDeath
+		SCP2 L -1 A_MetaBossDeath;
 		Stop;
     Raise:
 		SCP1 K 0 { bSPRITEFLIP = 0; }

@@ -28,6 +28,7 @@ class MetaMancubus : MonsterCore
 		Obituary "$OB_FATSO";
 		Species "Fatso";
 		Tag "Mancubus";
+		MonsterCore.Replacee "Fatso";
 		//$Category "Monsters/MetaDoom/Mancubus"
 		//$Title "Mancubus"
 		//$Color 12
@@ -64,7 +65,7 @@ class MetaMancubus : MonsterCore
 		FATT P 6 ;
 		FATT Q 6 A_PlaySound("monsters/mancubus/melt");
 		FATT RS 6;
-		FATT T -1 A_KillMaster; //A_BossDeath;
+		FATT T -1 A_MetaBossDeath;
 	    Stop;
 	 Raise:
 		FATT R 5; 
@@ -134,6 +135,7 @@ class MetaBehemoth : MonsterCore
 		Species "Fatso";
 		scale 0.75;
 		Tag "Behemoth";
+		MonsterCore.Replacee "Fatso";
 		//$Category "Monsters/MetaDoom/Mancubus"
 		//$Title "Behemoth"
 		//$Color 12
@@ -232,7 +234,7 @@ class MetaBehemoth : MonsterCore
 		}
 		2FAT N 6;
 		2FAT O 6;
-		2FAT O -1 A_KillMaster; //A_BossDeath;
+		2FAT O -1 A_MetaBossDeath();
 	    Stop;
 	 Raise:
 		2FAT ONMLKJ 5;
@@ -380,7 +382,7 @@ class MetaCyberManc : MonsterCore
 		CFAT R 6 A_Scream;
 		CFAT S 6 A_NoBlocking;
 		CFAT T 6 A_PlaySound("monsters/cybermanc/die2");
-		CFAT U 32 A_KillMaster; //A_BossDeath;
+		CFAT U 32 A_MetaBossDeath();
 		CFAT Z 4 BRIGHT A_PlaySound("monsters/cybermanc/boop");
 		CFAT U 24;
 		CFAT Z 4 BRIGHT A_PlaySound("monsters/cybermanc/boop");

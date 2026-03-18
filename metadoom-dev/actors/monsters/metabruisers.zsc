@@ -114,7 +114,7 @@ class MetaBaronOfHell : MonsterCore
 		BARO P  8 A_Scream;
 		BARO Q  8 A_NoBlocking;
 		BARO R  8 A_PlaySound("bodyfalls/heavy");
-		BARO S -1 A_KillMaster; //A_BossDeath
+		BARO S -1 A_MetaBossDeath;
 		Stop;
 	Raise:
 		BARO R 8 { bSPRITEFLIP = 0; }
