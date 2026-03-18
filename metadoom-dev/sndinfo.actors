@@ -916,3 +916,33 @@ monsters/marauder/effort2				marthrv2
 $random monsters/marauder/die { monsters/marauder/die1 monsters/marauder/die2 }
 monsters/marauder/die1				mardie1
 monsters/marauder/die2				mardie2
+
+monsters/marauder/dodge "sounds/actors/marauder/marauder_dodgewhoosh.ogg"
+monsters/marauder/shotwarn "sounds/actors/marauder/marauder_shotwarn.ogg"
+
+// Maggot
+$random monsters/maggot/pain
+{
+	monsters/maggot/pain1 monsters/maggot/pain2 monsters/maggot/pain3 monsters/maggot/pain4
+}
+monsters/maggot/pain1 "sounds/actors/maggot/maggot_pain1.ogg"
+monsters/maggot/pain2 "sounds/actors/maggot/maggot_pain2.ogg"
+monsters/maggot/pain3 "sounds/actors/maggot/maggot_pain3.ogg"
+monsters/maggot/pain4 "sounds/actors/maggot/maggot_pain4.ogg"
+
+$random monsters/maggot/sight
+{
+	monsters/maggot/sight1 monsters/maggot/sight2 monsters/maggot/sight3
+}
+monsters/maggot/sight1 "sounds/actors/maggot/maggot_sight1.ogg"
+monsters/maggot/sight2 "sounds/actors/maggot/maggot_sight2.ogg"
+monsters/maggot/sight3 "sounds/actors/maggot/maggot_sight3.ogg"
+
+monsters/maggot/swing "sounds/actors/maggot/maggot_swing.ogg"
+
+$random monsters/maggot/getup { monsters/maggot/getup1 monsters/maggot/getup2 }
+monsters/maggot/getup1 "sounds/actors/maggot/maggot_getup1.ogg"
+monsters/maggot/getup2 "sounds/actors/maggot/maggot_getup2.ogg"
+$random monsters/maggot/getdown { monsters/maggot/getdown1 monsters/maggot/getdown2 }
+monsters/maggot/getdown1 "sounds/actors/maggot/maggot_getdown1.ogg"
+monsters/maggot/getdown2 "sounds/actors/maggot/maggot_getdown2.ogg"

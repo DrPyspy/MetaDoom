@@ -90,6 +90,8 @@ Actor Definitions
  #include "actors/monsters/metaarchminions.zsc"
 #include "actors/monsters/metarevenant.zsc"
 
+#include "actors/monsters/metamaggot.zsc"
+
 // Bosses
 #include "actors/monsters/metacyberdemon.zsc"
 #include "actors/monsters/metaspiderdemon.zsc"

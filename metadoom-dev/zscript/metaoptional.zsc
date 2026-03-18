@@ -145,64 +145,116 @@ class MetaOptionalProps : EventHandler
 }
 
 // Replace monsters that haven't been replaced by DEHACKED with new, fully meta-fied monsters.
-class MetaOptionalMonsters : EventHandler
+
+Class MetaOptionalMonsters : StaticEventHandler
 {
+	static const string oldActor[] =
+	{
+		// Standard Doom Actors
+		"ZombieMan", "ShotgunGuy", "ChaingunGuy", "DoomImp", "Demon", 
+		"MBFHelperDog", "Spectre", "Cacodemon", "HellKnight", "PainElemental", 
+		"LostSoul", "ArchVile", "Revenant", "BaronOfHell", "Arachnotron", "Fatso",
+		"SpiderMastermind", "Cyberdemon",
+		// Traditionally "Optional" Actors
+		"WolfensteinSS", "CommanderKeen",
+		// Scripted Marines - Order is important!
+		"MarineRocket", "MarineBerserk", "MarineFist", "MarineChainsaw",
+		"MarinePistol", "MarineShotgun", "MarineSSG", "MarineChaingun",
+		"MarinePlasma", "MarineRailgun", "MarineBFG", "ScriptedMarine"
+	};
+	
+	static const string newActor[] =
+	{
+		// Standard Doom Actors
+		"ZombiemanSpawner", "ShotgunGuySpawner", "ChaingunGuySpawner", "ImpSpawner", "PinkySpawner",
+		"DogSpawner", "SpectreSpawner", "CacodemonSpawner", "HellKnightSpawner", "PainElementalSpawner",
+		"LostSoulSpawner", "ArchVileSpawner","RevenantSpawner",	"BaronOfHellSpawner", "ArachnotronSpawner", "MancubusSpawner",
+		"SpiderMastermindSpawner", "CyberdemonSpawner",
+		// Traditionally "Optional" Actors
+		"WolfSSSpawner", "KeenSpawner",
+		// Scripted Marines - Order is important!
+		"MetaMarineRocket", "MetaMarineBerserk", "MetaMarineFist", "MetaMarineChainsaw",
+		"MetaMarinePistol", "MetaMarineShotgun", "MetaMarineSSG", "MetaMarineChaingun",
+		"MetaMarinePlasma", "MetaMarineRailgun", "MetaMarineBFG", "MetaScriptedMarine"			
+	};
+	
+	Array< Class<Actor> > replacees;
+	Array< Class<Actor> > replacements;
+	
+	void AddReplacement(string old, string new)
+	{
+		Class<Actor> oldClass = old;
+		if ( !oldClass ) return;
+		
+		let def = GetDefaultByType(oldClass);
+		if ( def.SpawnState.bDeHacked
+			|| (def.SeeState != null && def.SeeState.bDeHacked)
+			|| (def.MeleeState != null && def.MeleeState.bDeHacked)
+			|| (def.MissileState != null && def.MissileState.bDeHacked)
+			|| (def.FindState("Pain") != null && def.FindState("Pain").bDeHacked)
+			|| (def.FindState("Death") != null && def.FindState("Death").bDeHacked)
+			|| (def.FindState("XDeath") != null && def.FindState("XDeath").bDeHacked) )
+		{
+			if (meta_developer) Console.printf("Optional: %s is DEHACKED, not replacing with %s", old, new);
+			return;
+		}
+		
+		Class<Actor> newClass = new;
+		
+		replacees.Push(oldClass);
+		replacements.Push(newClass);
+	}
+	
+	override void OnRegister()
+	{
+		// Zombies
+		AddReplacement("ZombieMan", "ZombiemanSpawner");
+		AddReplacement("ShotgunGuy", "ShotgunGuySpawner");
+		AddReplacement("ChaingunGuy", "ChaingunSpawner");
+		
+		// Ground Demons
+		AddReplacement("DoomImp", "ImpSpawner");
+		AddReplacement("Demon", "PinkySpawner");
+		AddReplacement("Spectre", "SpectreSpawner");
+		AddReplacement("Fatso", "MancubusSpawner");
+		AddReplacement("Arachnotron", "ArachnotronSpawner");
+		AddReplacement("Archvile", "ArchvileSpawner");
+		AddReplacement("Revenant", "RevenantSpawner");
+		
+		// Air Demons
+		AddReplacement("LostSoul", "LostSoulSpawner");
+		AddReplacement("Cacodemon", "CacodemonSpawner");
+		AddReplacement("PainElemental", "PainElementalSpawner");
+		
+		// Hell Nobles
+		AddReplacement("HellKnight", "HellKnightSpawner");
+		AddReplacement("BaronOfHell", "BaronOfHellSpawner");
+		
+		// Bosses
+		AddReplacement("Cyberdemon", "CyberdemonSpawner");
+		AddReplacement("SpiderMastermind", "SpiderMastermindSpawner");
+		
+		// Secret
+		AddReplacement("WolfensteinSS", "WolfSSSpawner");
+		AddReplacement("Keen", "KeenSpawner");
+	}
+	
     override void CheckReplacement(ReplaceEvent e)
 	{
-		static const string oldActor[] =
-		{
-			// Standard Doom Actors
-			"ZombieMan", "ShotgunGuy", "ChaingunGuy", "DoomImp", "Demon", 
-			"MBFHelperDog", "Spectre", "Cacodemon", "HellKnight", "PainElemental", 
-			"LostSoul", "ArchVile", "Revenant", "BaronOfHell", "Arachnotron", "Fatso",
-			"SpiderMastermind", "Cyberdemon",
-			// Traditionally "Optional" Actors
-			"WolfensteinSS", "CommanderKeen",
-			// Scripted Marines - Order is important!
-			"MarineRocket", "MarineBerserk", "MarineFist", "MarineChainsaw",
-			"MarinePistol", "MarineShotgun", "MarineSSG", "MarineChaingun",
-			"MarinePlasma", "MarineRailgun", "MarineBFG", "ScriptedMarine"
-		};
-		
-		static const string newActor[] =
-		{
-			// Standard Doom Actors
-			"ZombiemanSpawner", "ShotgunGuySpawner", "ChaingunGuySpawner", "ImpSpawner", "PinkySpawner",
-			"DogSpawner", "SpectreSpawner", "CacodemonSpawner", "HellKnightSpawner", "PainElementalSpawner",
-			"LostSoulSpawner", "ArchVileSpawner","RevenantSpawner",	"BaronOfHellSpawner", "ArachnotronSpawner", "MancubusSpawner",
-			"SpiderMastermindSpawner", "CyberdemonSpawner",
-			// Traditionally "Optional" Actors
-			"WolfSSSpawner", "KeenSpawner",
-			// Scripted Marines - Order is important!
-			"MetaMarineRocket", "MetaMarineBerserk", "MetaMarineFist", "MetaMarineChainsaw",
-			"MetaMarinePistol", "MetaMarineShotgun", "MetaMarineSSG", "MetaMarineChaingun",
-			"MetaMarinePlasma", "MetaMarineRailgun", "MetaMarineBFG", "MetaScriptedMarine"			
-		};
-		
-		for(int i = 0; i < oldActor.size(); i++)
-		{
-			if ( e.Replacee == oldActor[i] ) 
-			{
-				if (GetDefaultByType(e.Replacee).SpawnState.bDeHacked
-				|| (GetDefaultByType(e.Replacee).SeeState != null && GetDefaultByType(e.Replacee).SeeState.bDeHacked)
-				|| (GetDefaultByType(e.Replacee).MeleeState != null && GetDefaultByType(e.Replacee).MeleeState.bDeHacked)
-				|| (GetDefaultByType(e.Replacee).MissileState != null && GetDefaultByType(e.Replacee).MissileState.bDeHacked)
-				|| (GetDefaultByType(e.Replacee).FindState("Pain") != null && GetDefaultByType(e.Replacee).FindState("Pain").bDeHacked)
-				|| (GetDefaultByType(e.Replacee).FindState("Death") != null && GetDefaultByType(e.Replacee).FindState("Death").bDeHacked)
-				|| (GetDefaultByType(e.Replacee).FindState("XDeath") != null && GetDefaultByType(e.Replacee).FindState("XDeath").bDeHacked))
-				{
-					if (meta_developer)
-						Console.printf("Optional: %s is DEHACKED, not replacing with %s", oldActor[i], newActor[i]);
-						break;
-				} else {
-					e.Replacement = newActor[i];
-				}
-			}
-		}
+		int i = replacees.Find(e.Replacee);
+		if ( i == replacees.Size() ) return;
+		e.Replacement = replacements[i];
+    }
+	
+    override void CheckReplacee(ReplacedEvent e)
+	{
+		int i = replacements.Find(e.Replacement);
+		if ( i == replacees.Size() ) return;
+		e.Replacee = replacees[i];
     }
 	
 	// Un-Fuck A_BossDeath
-	override void CheckReplacee(ReplacedEvent e)
+	/*override void CheckReplacee(ReplacedEvent e)
 	{
 		if (e.Replacement == "BaronOfHellSpawner")
 		{
@@ -228,5 +280,5 @@ class MetaOptionalMonsters : EventHandler
 		{
 			e.Replacee = "SpiderMastermind";
 		}
-	}
+	}*/
 }
