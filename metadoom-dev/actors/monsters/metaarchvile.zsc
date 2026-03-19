@@ -38,6 +38,15 @@ class MetaArchvile : MonsterCore
 		//$Title "Arch-Vile"
 		//$Color 12
 	}
+	
+	override int, State CheckExtinguish ()
+	{
+		if ( InStateSequence(curState, resolveState("Missile")) )
+		{
+			return 0, resolveState("MissileFailed");
+		}
+		return 0, resolveState(null);
+	}
 
 	States
 	{
@@ -52,14 +61,14 @@ class MetaArchvile : MonsterCore
 		VILE G 10 BRIGHT A_FaceTarget ;
 		VILE H 8 BRIGHT A_VileTarget("MetaArchvileFire");
 		VILE IJKLMN 8 BRIGHT A_FaceTarget;
-		VILE O 0 BRIGHT A_JumpIfInTargetInventory("FireExtinguished",1,"MissileFailed");
+		//VILE O 0 BRIGHT A_JumpIfInTargetInventory("FireExtinguished",1,"MissileFailed");
 		VILE O 8 BRIGHT A_VileAttack("monsters/archvile/boom", 20, 70, 70, 1, "Fire");
 		VILE P 20 BRIGHT;
 		Goto See;
 	MissileFailed:
-		VILE O 8 BRIGHT A_PlaySound("monsters/archvile/dud");
-		VILE P 20 BRIGHT;
-		VILE A 10;
+		VILE Q 10 A_PlaySound("monsters/archvile/dud");
+		//VILE P 20 BRIGHT;
+		//VILE A 10;
 		VILE Q 10;
 		VILE A 5;
 		Goto See;
@@ -164,6 +173,14 @@ class MetaSummoner : MonsterCore
 	
 	int outtasight;
 	
+	override int, State CheckExtinguish ()
+	{
+		if ( InStateSequence(curState, resolveState("Missile")) )
+		{
+			return 0, resolveState("MissileFailed");
+		}
+		return 0, resolveState(null);
+	}
 
 	States
 	{
@@ -193,10 +210,8 @@ class MetaSummoner : MonsterCore
 		SUMN PQ 10 BRIGHT;
 		Goto See;
 	MissileFailed:
-		SUMN O 8 BRIGHT A_PlaySound("monsters/archvile/dud");
-		SUMN P 20 BRIGHT;
-		SUMN A 10;
-		SUMN S 10;
+		SUMN R 10 A_PlaySound("monsters/archvile/dud");
+		SUMN R 10;
 		SUMN A 5;
 		Goto See;
 	Heal:
@@ -463,6 +478,15 @@ class MetaInfernis : MonsterCore
 	
 	int hidingtimer;
 	bool firsthide;
+	
+	override int, State CheckExtinguish ()
+	{
+		if ( InStateSequence(curState, resolveState("Missile")) )
+		{
+			return 0, resolveState("MissileFailed");
+		}
+		return 0, resolveState(null);
+	}
 
 	States
 	{
@@ -519,9 +543,7 @@ class MetaInfernis : MonsterCore
 		INF1 P 20 BRIGHT;
 		Goto See;
 	MissileFailed:
-		INF1 O 8 BRIGHT A_PlaySound("monsters/archvile/dud");
-		INF1 P 20 BRIGHT;
-		INF1 A 10;
+		INF1 T 10 A_PlaySound("monsters/archvile/dud");
 		INF1 T 10;
 		INF1 A 5;
 		Goto See;

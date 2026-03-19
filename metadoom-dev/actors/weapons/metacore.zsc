@@ -169,17 +169,6 @@ Class MetaDoomWeapon : Weapon
 			Wait;
 	}
 	
-	action State A_JumpIfQuickMelee(StateLabel jumpbert, bool deselect = true)
-	{
-		let plr = MetaDoomPlayer(invoker.owner);
-		if ( plr && plr.melee_prevWeapon )
-		{
-			plr.UnMelee();
-			return resolveState(jumpbert);
-		}
-		return resolveState(null);
-	}
-	
 	// Smooth Raise and Lower code by Boondorl
 	action void A_SmoothRaise(int maxSpeed = 28)
 	{
@@ -290,22 +279,70 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 	int chargeAmount;
 	int chargeTime;
 	int maxCharges;
+	int chargeType;
+	
+	int fuelAmount;
+	int maxFuel;
+	
+	int fuelDelayer;
+	int fuelDelay;
+	
+	const CHARGETYPE_DEFAULT = 0;
+	const CHARGETYPE_FUEL = 1;
 	
 	string failSound;
 	property FailSound : failsound;
 	property MaxCharges : maxCharges;
 	property ChargeTime : chargeTime;
+	property ChargeType : chargeType;
+	property FuelDelay : fuelDelay;
+	property MaxFuel : maxfuel;
+	
+	action State A_JumpIfQuickMeleeRefire(StateLabel doFire, StateLabel noFire)
+	{
+		let weap = MetaDoomMeleeWeapon(invoker);
+		if ( !weap ) return resolveState(null);
+		let plr = MetaDoomPlayer(invoker.owner);
+		if ( plr && plr.melee_prevWeapon )
+		{
+			if ( plr.melee_button && invoker.CanUseChargeAttack() )
+			{
+				weap.UseUpCharge();
+				return resolveState(doFire);
+			}
+			plr.UnMelee();
+			return resolveState(noFire);
+		}
+		return resolveState(null);
+	}
+	
+	action State A_JumpIfQuickMelee(StateLabel jumpbert, bool deselect = true)
+	{
+		let weap = MetaDoomMeleeWeapon(invoker);
+		if ( !weap ) return resolveState(null);
+		let plr = MetaDoomPlayer(invoker.owner);
+		if ( plr && plr.melee_prevWeapon )
+		{
+			plr.UnMelee();
+			return resolveState(jumpbert);
+		}
+		return resolveState(null);
+	}
 	
 	Default
 	{
 		MetaDoomMeleeWeapon.MaxCharges 1;
 		MetaDoomMeleeWeapon.ChargeTime 245;
+		MetaDoomMeleeWeapon.ChargeType CHARGETYPE_DEFAULT;
+		MetaDoomMeleeWeapon.FuelDelay 70;
+		MetaDoomMeleeWeapon.MaxFuel 35;
 	}
 	
 	override void PostBeginPlay()
 	{
 		super.PostBeginPlay();
 		charges = maxCharges;
+		fuelAmount = chargeTime;
 	}
 	
 	override void Tick()
@@ -320,21 +357,58 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 				charges += 1;
 			}
 		}
+		if ( fuelDelayer > 0 )
+		{
+			fuelDelayer -= 1;
+		}
+		if ( fuelAmount < maxFuel && fuelDelayer <= 0 )
+		{
+			fuelAmount += 1;
+		}
 	}
 	
 	clearscope double GetChargePercent()
 	{
-		return (chargeAmount / double(chargeTime));
+		switch (chargeType)
+		{
+			case CHARGETYPE_FUEL:
+				return (fuelAmount / double(maxFuel)) * 100;
+		}
+		return (charges == maxCharges) ? 100 : (chargeAmount / double(chargeTime)) * 100;
 	}
 	
 	void UseUpCharge(int amount = 1)
 	{
-		charges = max(0, charges-amount);
+		switch (chargeType)
+		{
+			case CHARGETYPE_FUEL:
+				if ( fuelAmount > 0 )
+				{
+					fuelAmount -= 1;
+					fuelDelayer = fuelDelay;
+				}
+				break;
+			default:
+				charges = max(0, charges-amount);
+				break;
+		}
 	}
 	
-	bool CanUseChargeAttack()
+	action void A_UseUpCharge(int amount = 1)
 	{
-		return charges > 0;
+		invoker.UseUpCharge(amount);
+	}
+	
+	clearscope bool CanUseChargeAttack()
+	{
+		switch (chargeType)
+		{
+			case CHARGETYPE_FUEL:
+				return fuelAmount > 0;
+			default:
+				return charges > 0;
+		}
+		return false;
 	}
 	
 	string GetFailSound()

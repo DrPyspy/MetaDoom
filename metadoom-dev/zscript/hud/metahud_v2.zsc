@@ -278,7 +278,7 @@ class MetaDoomStatusBar : BaseStatusBar
 		{
 			DrawString(mAmountFont, ""..meleeWeapon.charges, (x_left+103, y+11), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_RIGHT, Font.CR_WHITE);
 			//DrawString(mSmallFont, ""..(100*meleeWeapon.GetChargePercent()).."%", (64, 72), DI_ITEM_OFFSETS|DI_TEXT_ALIGN_LEFT, Font.CR_GOLD);
-			DrawBar("graphics/hud_v2/bar_meleebar.png", "", meleeWeapon.charges == meleeWeapon.maxCharges ? meleeWeapon.chargeTime : meleeWeapon.GetChargePercent()*meleeWeapon.chargeTime, meleeWeapon.chargeTime, (x_left+106, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
+			DrawBar("graphics/hud_v2/bar_meleebar.png", "", meleeWeapon.GetChargePercent(), 100, (x_left+106, y+2), 0, SHADER_VERT|SHADER_REVERSE, DI_ITEM_OFFSETS);
 		}
 		
 		/*if (state == HUD_StatusBar)

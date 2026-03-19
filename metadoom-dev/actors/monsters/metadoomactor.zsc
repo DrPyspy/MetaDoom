@@ -62,7 +62,7 @@ class MonsterCore : Actor
 		painchance "Bleeding", 0;
 		painchance "LightningGun", 24;
 		painchance "SoulCube", 255;
-		damagefactor "FireExtinguisher", 0;
+		//damagefactor "FireExtinguisher", 0;
 		damagefactor "DogCollar", 0;
 		damagefactor "LightningStun", 0.1;
 		painchance "DogCollar", 0;
@@ -487,11 +487,33 @@ class MonsterCore : Actor
 		}
 	}
 	
+	virtual int, State CheckExtinguish ()
+	{
+		return 0, resolveState(null);
+	}
+	
+	int TryExtinguish (Actor perp)
+	{
+		int did;
+		State goState;
+		[did, goState] = CheckExtinguish();
+		if ( goState )
+		{
+			SetState(goState);
+		}
+		return did;
+	}
+	
 	override int DamageMobj(Actor inflictor, Actor source, int damage, Name mod, int flags, double angle)
 	{
 		if ( mod == 'HolyWater' && CanBeScared )
 		{
 			scurredamount = HOLY_SCAREDTIME;
+		}
+		
+		if ( mod == 'FireExtinguisher' )
+		{
+			damage = TryExtinguish(source);
 		}
 		
 		// When damaged by the Axe, note down the inflictor as the cause of the bleeding damage

@@ -43,7 +43,7 @@ class MetaDoomPlayer : PlayerPawn
 		Player.CrouchSprite "MPLC";
 		Player.StartItem "MetaPistol";
 		Player.StartItem "MetaFist";
-		Player.WeaponSlot 1, "MetaBerserkFist", "MetaFist", "MetaAxe", "MetaChainsaw";//, "MetaFireExtinguisher";
+		Player.WeaponSlot 1, "MetaBerserkFist", "MetaFist", "MetaFireExtinguisher", "MetaAxe", "MetaChainsaw";//, "MetaFireExtinguisher";
 		Player.WeaponSlot 2, "MetaPistol", "MetaHolyWaterPistol";
 		Player.WeaponSlot 3, "MetaShotgun", "MetaSuperShotgun";
 		Player.WeaponSlot 4, "MetaChaingun", "MetaMachineGun";
@@ -87,6 +87,7 @@ class MetaDoomPlayer : PlayerPawn
 	
 	int melee_state;
 	Weapon melee_prevWeapon;
+	bool melee_button;
 	
 	Inventory GetInvThatIsNotThis(Inventory no = null)
 	{
@@ -138,8 +139,12 @@ class MetaDoomPlayer : PlayerPawn
 		A_StartSound("inventory/swap", 15);
 	}
 	
-	void QuickMelee()
+	void QuickMelee(bool pressed)
 	{
+		melee_button = pressed;
+		
+		if ( !pressed ) return;
+		
 		if ( player.WeaponState & WF_DISABLESWITCH ) return;
 		if ( !(player.WeaponState & WF_WEAPONREADY) ) return;
 		if ( melee_state != 0 ) return;

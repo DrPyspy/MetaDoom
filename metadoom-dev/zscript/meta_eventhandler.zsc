@@ -217,7 +217,8 @@ Class Meta_OmniEventHandler : EventHandler
 		
 		if ( cmds[1] ~== "quickmelee" )
 		{
-			MetaDoomPlayer(player.mo).QuickMelee();
+			Console.Printf(""..cmds[2]);
+			MetaDoomPlayer(player.mo).QuickMelee(cmds[2] == "on");
 			return;
 		}
 	}

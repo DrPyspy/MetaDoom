@@ -48,29 +48,35 @@ class MetaFireExtinguisherPickup : WeaponGiver
 	}
 }
 
-class MetaFireExtinguisher : MetaDoomWeapon
+class MetaFireExtinguisher : MetaDoomMeleeWeapon
 {
 	Default
 	{
 		Weapon.SelectionOrder 1900;
-		Weapon.AmmoUse 1;
+		/*Weapon.AmmoUse 1;
 		Weapon.AmmoGive 100;
-		Weapon.AmmoType "HalonCannister";
+		Weapon.AmmoType "HalonCannister";*/
 		+WEAPON.WIMPY_WEAPON;
 		Inventory.Pickupmessage "$GOTFIREX";
 		Tag "$TAGFIREX";
 		Inventory.PickupSound "weapons/fireextinguisher/get";
 		Weapon.UpSound "weapons/fireextinguisher/use";
+		MetaDoomMeleeWeapon.ChargeType CHARGETYPE_FUEL;
+		MetaDoomMeleeWeapon.ChargeTime 70;
+		MetaDoomMeleeWeapon.MaxFuel 70;
 		//$Category "Weapons/MetaDoom"
 		//$Title "Fire Extinguisher"
 		//$NotAngled
 		//$Color 14
 	}
 	
+	Vector2 windup_start;
+	int windup;
+	
 	States
 	{
 	Ready:
-		FIEX A 1 A_WeaponReady;
+		FIEX B 1 A_WeaponReady;
 		"####" A 0 A_JumpIfInventory("MeleePunch", 1, "MeleePunch");
 		Loop;
 	Deselect:
@@ -85,6 +91,86 @@ class MetaFireExtinguisher : MetaDoomWeapon
 		FIEX A 1 A_SmoothRaise();
 		loop;
 	Fire:
+	WindUp:
+		FIEX A 0
+		{
+			invoker.windup = 0;
+			
+			let recoil = new("Meta_RecoilInfo");
+			recoil.tics_in = 3;
+			recoil.tics_out = 3;
+			recoil.yaw = 0.5;
+			recoil.roll = 0.15;
+			A_MetaRecoil(recoil);
+		}
+		FIEX BBBB 1
+		{
+			double progress = (invoker.windup/4.);
+			progress = progress * progress * progress;
+			double x = invoker.windup_start.x + ( -400 - invoker.windup_start.x ) * progress;
+			double y = invoker.windup_start.y + ( -32 - invoker.windup_start.y ) * progress;
+			
+			A_WeaponOffset(x, y, WOF_INTERPOLATE);
+			invoker.windup += 1;
+		}
+		Goto FireFinish;
+	FireFinish:
+		FIEX C 1 
+		{
+			A_StopSound(CHAN_WEAPON);
+			A_StartSound("weapons/chainsaw/slash", CHAN_BODY, pitch:frandom(0.98,1.02));
+			
+			if (CountInv("PowerMetaDamage") > 0)
+			{
+				A_PlaySound("powerups/quad/use", CHAN_5);
+			}
+			
+			let recoil = new("Meta_RecoilInfo");
+			recoil.tics_in = 3;
+			recoil.tics_out = 15;
+			recoil.yaw = -0.5;
+			recoil.roll = -0.15;
+			recoil.roll_speed = random(30,35);
+			recoil.roll_shake = 0.05;
+			A_MetaRecoil(recoil);
+			
+			A_Overlay(135, "Overlay.QuickMeleeOffset");
+		}
+		FIEX C 1;
+		FIEX C 1;
+		FIEX C 1;
+		FIEX C 1;
+		FIEX C 1 A_CustomPunch(7 * random(1, 5), TRUE, CPF_NOTURN,"MetaAxePuff",80,0,0,"BasicArmorBonus","weapons/axe/hit");
+		FIEX C 1;
+		FIEX C 1;
+		FIEX C 1;
+		FIEX C 1;
+		TNT1 A 22 A_WeaponOffset(0,90);
+		"----" A 0 A_JumpIfQuickMelee("Deselect");
+		FIEX C 1 { A_WeaponOffset(0,90,WOF_INTERPOLATE); A_PlaySound("weapons/chainsaw/get", CHAN_WEAPON); }
+		FIEX C 1 A_WeaponOffset(0,80,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,70,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,60,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,55,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,49,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,44,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,39,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,35,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,33,WOF_INTERPOLATE);
+		FIEX C 1 A_WeaponOffset(0,32,WOF_INTERPOLATE);
+		goto Ready;
+	Overlay.QuickMeleeOffset:
+		TNT1 A 1 A_WeaponOffset(-240.00, 48.00, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(-216.23, 41.06, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(-149.64, 35.49, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(-53.41, 32.40, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(53.41, 32.40, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(149.64, 35.49, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(216.23, 41.06, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(240.00, 48.00, WOF_INTERPOLATE);
+		TNT1 A 1 A_WeaponOffset(216.23, 54.94, WOF_INTERPOLATE);
+		Stop;
+	QuickMelee:
 		FIEX A 0 
 		{
 			A_PlaySound("weapons/fireextinguisher/fire", CHAN_WEAPON, 1.0, 1);
@@ -94,12 +180,13 @@ class MetaFireExtinguisher : MetaDoomWeapon
 				A_PlaySound("powerups/quad/use", CHAN_5);
 			}
 		}
-		FIEX BBBB 1
+		FIEX AAAA 1
 		{
 			A_WeaponOffset(random(-2,2),random(32,34),WOF_INTERPOLATE);
-			A_FireProjectile ("MetaFireExtinguisherSpray", random(-16,16), 1, 4, 0, FPF_NOAUTOAIM, random(-4,4));
+			A_FireProjectile("MetaFireExtinguisherSpray", random(-4,4), 0, 0, 0, FPF_NOAUTOAIM, random(-4,4));
+			A_UseUpCharge();
 		}
-		FIEX A 0 A_ReFire();
+		FIEX A 0 A_JumpIfQuickMeleeRefire("QuickMelee", "Deselect");
 		FIEX A 10 A_StopSound(CHAN_WEAPON);
 		Goto Ready;
 	AltFire:
@@ -118,7 +205,7 @@ class MetaFireExtinguisher : MetaDoomWeapon
 		TNT1 A 20;
 		goto Select;
 	NoAmmo:
-		FIEX B 10 { A_Overlay(14, "Overlay.GenericButtonPress"); A_PlaySound("weapons/waterpistol/empty", CHAN_WEAPON); }
+		FIEX A 10 { A_Overlay(14, "Overlay.GenericButtonPress"); A_PlaySound("weapons/waterpistol/empty", CHAN_WEAPON); }
 		goto Ready;
  	Spawn:
 		FIEX Z -1;
@@ -132,8 +219,8 @@ class MetaFireExtinguisherSpray : Actor
 	{
 		Radius 15;
 		Height 15;
-		Speed 5;
-		DamageFunction (1);
+		Speed 20;
+		DamageFunction 1;
 		Projectile;
 		+RANDOMIZE
 		+DONTSPLASH
@@ -143,6 +230,12 @@ class MetaFireExtinguisherSpray : Actor
 		scale 0.05;
 		damagetype "FireExtinguisher";
 		Decal "FireExtinguisherSpray";
+	}
+	
+	override void Tick()
+	{
+		super.Tick();
+		vel *= 0.9;
 	}
 	
 	States
