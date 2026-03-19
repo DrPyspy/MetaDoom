@@ -201,6 +201,7 @@ class MetaChainsaw : MetaDoomMeleeWeapon
 	AltFireFinish:
 		WSAW H 1 
 		{
+			A_UseUpCharge();
 			A_StopSound(CHAN_WEAPON);
 			A_StartSound("weapons/chainsaw/slash", CHAN_BODY, pitch:frandom(0.98,1.02));
 			

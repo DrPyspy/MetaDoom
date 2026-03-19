@@ -69,6 +69,8 @@ class MetaFist : MetaDoomMeleeWeapon
 		QuickMelee:
 			PUNG G 1 
 			{
+				A_UseUpCharge();
+				
 				A_PlaySound("weapons/melee/wiff");
 				
 				if (CountInv("PowerMetaDamage") > 0)

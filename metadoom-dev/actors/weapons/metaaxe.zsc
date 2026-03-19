@@ -97,6 +97,7 @@ class MetaAxe : MetaDoomMeleeWeapon
 			TNT1 A 2 A_WeaponOffset(0,32);
 			AXEG I 1
 			{
+				A_UseUpCharge();
 				
 				let recoil = new("Meta_RecoilInfo");
 				recoil.tics_in = 3;
