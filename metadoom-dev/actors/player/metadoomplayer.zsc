@@ -139,31 +139,39 @@ class MetaDoomPlayer : PlayerPawn
 		A_StartSound("inventory/swap", 15);
 	}
 	
+	void CheckQuickMelee()
+	{
+		switch ( melee_state )
+		{
+			case 0:
+				if ( !melee_button ) break;
+				if ( player.WeaponState & WF_DISABLESWITCH ) break;
+				if ( !(player.WeaponState & WF_WEAPONREADY) ) break;
+				let daWeapon = MetaDoomMeleeWeapon(PickWeapon(1, false));
+				if ( !daWeapon ) break;
+		
+				if ( !daWeapon.CanUseChargeAttack() )
+				{
+					player.mo.A_StartSound(daWeapon.failsound, 13);
+					player.mo.A_Log("No fuel for that shit");
+					break;
+				}
+				
+				daWeapon.UseUpCharge();
+		
+				melee_state = 1;
+				melee_prevWeapon = player.ReadyWeapon;
+				player.PendingWeapon = daWeapon;
+				player.FindPSprite(PSP_WEAPON).SetState(player.ReadyWeapon.resolveState("QuickMelee.SwapOut"));
+				break;
+		}
+		
+		//daWeapon.UseUpCharge();
+	}
+	
 	void QuickMelee(bool pressed)
 	{
 		melee_button = pressed;
-		
-		if ( !pressed ) return;
-		
-		if ( player.WeaponState & WF_DISABLESWITCH ) return;
-		if ( !(player.WeaponState & WF_WEAPONREADY) ) return;
-		if ( melee_state != 0 ) return;
-		let daWeapon = MetaDoomMeleeWeapon(PickWeapon(1, false));
-		if ( !daWeapon ) return;
-		
-		if ( !daWeapon.CanUseChargeAttack() )
-		{
-			player.mo.A_StartSound(daWeapon.failsound, 13);
-			player.mo.A_Log("No fuel for that shit");
-			return;
-		}
-		
-		daWeapon.UseUpCharge();
-		
-		melee_state = 1;
-		melee_prevWeapon = player.ReadyWeapon;
-		player.PendingWeapon = daWeapon;
-		player.FindPSprite(PSP_WEAPON).SetState(player.ReadyWeapon.resolveState("QuickMelee.SwapOut"));
 	}
 	
 	void UnMelee()
@@ -891,6 +899,8 @@ class MetaDoomPlayer : PlayerPawn
 				CheckWeaponButtons();
 			}
 		}
+		
+		CheckQuickMelee();
 	}
 	
 	override void CheckJump()
