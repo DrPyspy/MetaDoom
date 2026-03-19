@@ -93,7 +93,7 @@ class MetaRevenant : MonsterCore
 	}
 }
 
-class MetaRevenantTracer : Actor replaces RevenantTracer
+class MetaRevenantTracer : MetaProjectile replaces RevenantTracer
 {
 	Default
 	{
@@ -108,15 +108,15 @@ class MetaRevenantTracer : Actor replaces RevenantTracer
 		//DeathSound "skeleton/tracex";
 		decal "RevenantScorch";
 		RenderStyle "Add";
+		
+		+MetaProjectile.CanExtinguish
 	}
 
 	States
 	{
 	Spawn:
 		FATB A 0;
-		FATB A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		FATB A 2 Bright A_Tracer;
-		FATB A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		FATB B 2 Bright A_Tracer;
 		Loop;
 	Death:

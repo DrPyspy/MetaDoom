@@ -236,24 +236,36 @@ class MetaFireExtinguisherSpray : Actor
 	{
 		super.Tick();
 		vel *= 0.9;
+		if ( level.maptime % 2 == 0 )
+		{
+			ThinkerIterator it = ThinkerIterator.Create("MetaProjectile");
+			MetaProjectile mo;
+
+			while ( mo = MetaProjectile(it.Next()) )
+			{
+				if ( mo.bCanExtinguish && !mo.extinguished && Distance3D(mo) <= 16 )
+				{
+					mo.extinguished = true;
+					mo.SetStateLabel("Extinguished");
+				}
+			}
+		}
 	}
 	
 	States
 	{
-	Spawn:
-		FIFX AB 3
-		{
-			A_FadeOut(0.1);
-			A_SetScale(scale.x + 0.05);
-			A_RadiusGive ("ExtinguisherToken", 96, RGF_MISSILES);
-		}
-		FIFX CDEF 3
-		{
-			A_FadeOut(0.1);
-			A_SetScale(scale.x + 0.05);
-			A_RadiusGive ("ExtinguisherToken", 96, RGF_MISSILES);
-		}
-		Stop;
+		Spawn:
+			FIFX AB 3
+			{
+				A_FadeOut(0.1);
+				A_SetScale(scale.x + 0.05);
+			}
+			FIFX CDEF 3
+			{
+				A_FadeOut(0.1);
+				A_SetScale(scale.x + 0.05);
+			}
+			Stop;
 	}
 }
 

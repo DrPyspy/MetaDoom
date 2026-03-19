@@ -73,7 +73,7 @@ class MetaMancubus : MonsterCore
 		Goto See;
 	}
 }
-class MetaFatShot : Actor
+class MetaFatShot : MetaProjectile
 {
 	Default
 	{
@@ -88,6 +88,8 @@ class MetaFatShot : Actor
 		SeeSound "monsters/mancubus/fire";
 		DeathSound "monsters/mancubus/boom";
 		decal "Scorch";
+		
+		+MetaProjectile.CanExtinguish
 	}
 
 	States
@@ -95,9 +97,7 @@ class MetaFatShot : Actor
 	Spawn:
 		MANF A 0;
 		MANF A 0 A_PlaySound("monsters/imp/fireball/loop", CHAN_BODY, 1.0, 1);
-		MANF A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		MANF A 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		MANF A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		MANF B 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
 		Loop;
 	Death:
@@ -242,7 +242,7 @@ class MetaBehemoth : MonsterCore
 	}
 }
 
-class MetaBehemothFire : Actor
+class MetaBehemothFire : MetaProjectile
 {
 	Default
 	{
@@ -258,15 +258,15 @@ class MetaBehemothFire : Actor
 		DeathSound "monsters/behemoth/missilehit";
 		decal "DoomImpScorch";
 		damagetype "Fire";
+		
+		+MetaProjectile.CanExtinguish
 	}
 
 	States
 	{
 	Spawn:
 		BAL1 A 0;
-		BAL1 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL1 A 4 BRIGHT A_SpawnItem ("MetaBehemothFireTrail", 0, -8, 0, 0);
-		BAL1 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL1 B 4 BRIGHT A_SpawnItem ("MetaBehemothFireTrail", 0, -8, 0, 0);
 		Loop;
 	Death:

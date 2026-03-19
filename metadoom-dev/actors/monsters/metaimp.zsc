@@ -76,7 +76,17 @@ class MetaDoomImp : MonsterCore
 	}
 }
 
-class MetaDoomImpBall : Actor
+Class MetaProjectile : Actor
+{
+	int metaProjFlags;
+	
+	bool extinguished;
+
+	flagdef CanExtinguish : metaProjFlags, 1;
+	flagdef CanParry : metaProjFlags, 2;
+}
+
+class MetaDoomImpBall : MetaProjectile
 {
 	Default
 	{
@@ -92,6 +102,8 @@ class MetaDoomImpBall : Actor
 		SeeSound "monsters/imp/shoot";
 		DeathSound "monsters/imp/fireball/hit";
 		decal "DoomImpScorch";
+		
+		+MetaProjectile.CanExtinguish
 	}
 
 	States
@@ -99,9 +111,7 @@ class MetaDoomImpBall : Actor
 	Spawn:
 		BAL1 A 0;
 		BAL1 A 0 A_PlaySound("monsters/imp/fireball/loop", CHAN_BODY, 1.0, 1);
-		BAL1 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL1 A 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL1 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL1 B 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
 		Loop;
 	Death:
@@ -213,7 +223,7 @@ class MetaNightmareImp : MonsterCore
 	}
 }
 
-class MetaNightmareImpBall : Actor
+class MetaNightmareImpBall : MetaProjectile
 {
 	Default
 	{
@@ -230,6 +240,8 @@ class MetaNightmareImpBall : Actor
 		SeeSound "monsters/nightmareimp/shoot";
 		DeathSound "monsters/nightmareimp/explode";
 		decal "DoomImpScorch";
+		
+		+MetaProjectile.CanExtinguish
 	}
 
 	States
@@ -237,9 +249,7 @@ class MetaNightmareImpBall : Actor
 	Spawn:
 		BAL3 A 0;
 		BAL3 A 0 A_PlaySound("monsters/imp/fireball/loop", CHAN_BODY, 1.0, 1);
-		BAL3 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL3 A 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL3 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL3 B 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
 		Loop;
 	Death:

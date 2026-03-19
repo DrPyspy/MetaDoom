@@ -299,7 +299,7 @@ class MetaHellknightCrush : Actor
 	}
 }
 
-class MetaBaronBall : Actor
+class MetaBaronBall : MetaProjectile
 {
 	Default
 	{
@@ -315,6 +315,8 @@ class MetaBaronBall : Actor
 		SeeSound "monsters/bruisers/fireball";
 		DeathSound "monsters/bruisers/fireballhit";
 		Decal "BaronScorch";
+		
+		+MetaProjectile.CanExtinguish
 	}
 
 	States
@@ -322,9 +324,7 @@ class MetaBaronBall : Actor
 	Spawn:
 		BAL7 A 0;
 		BAL7 A 0 A_PlaySound("monsters/imp/fireball/loop", CHAN_BODY, 1.0, 1);
-		BAL7 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 A 4 BRIGHT A_SpawnItem ("MetaBaronBallEffect", 0, 0, 0, 0);
-		BAL7 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 B 4 BRIGHT A_SpawnItem ("MetaBaronBallEffect", 0, 0, 0, 0);
 		Loop;
 	Death:
@@ -339,7 +339,7 @@ class MetaBaronBall : Actor
 	}
 }
 
-class MetaSuperBaronBall : Actor
+class MetaSuperBaronBall : MetaProjectile
 {
 	Default
 	{
@@ -355,6 +355,8 @@ class MetaSuperBaronBall : Actor
 		SeeSound "monsters/bruisers/fireball";
 		Decal "BaronScorch";
 		translation "112:127=174:191";
+		
+		+MetaProjectile.CanExtinguish
 	}
 
 	States
@@ -362,21 +364,13 @@ class MetaSuperBaronBall : Actor
 	Spawn:
 		BAL7 A 0;
 		BAL7 A 0 A_PlaySound("monsters/imp/fireball/loop", CHAN_BODY, 1.0, 1);
-		BAL7 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 A 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL7 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 B 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL7 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 A 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL7 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 B 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL7 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 A 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL7 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 B 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL7 A 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 A 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
-		BAL7 B 0 A_JumpIfInventory("ExtinguisherToken",1,"Extinguished");
 		BAL7 B 4 BRIGHT A_SpawnItem ("DoomImpBallEffect", 0, 0, 0, 0);
 	Death:
 		BAL7 C 0;
