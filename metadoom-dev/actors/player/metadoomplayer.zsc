@@ -138,6 +138,18 @@ class MetaDoomPlayer : PlayerPawn
 		invSlot_backup = save;
 		A_StartSound("inventory/swap", 15);
 	}
+
+	// [Py] Since the melee weapons reuse the quick melee and altfire stuff, intercept the weapons here to reduce work... maybe
+	override void FireWeaponAlt (State stat)
+	{
+		let weapn = MetaDoomMeleeWeapon(player.ReadyWeapon);
+		if ( weapn && !weapn.CanUseChargeAttack() )
+		{
+			return;
+		}
+
+		super.FireWeaponAlt(stat);
+	}
 	
 	void CheckQuickMelee()
 	{
@@ -156,8 +168,6 @@ class MetaDoomPlayer : PlayerPawn
 					player.mo.A_Log("No fuel for that shit");
 					break;
 				}
-				
-				daWeapon.UseUpCharge();
 		
 				melee_state = 1;
 				melee_prevWeapon = player.ReadyWeapon;
