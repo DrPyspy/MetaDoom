@@ -224,7 +224,8 @@ weapons/gauss/zoomout	gauszout
 // fire extinguisher
 weapons/fireextinguisher/get		fiexget
 weapons/fireextinguisher/use		fiexuse
-weapons/fireextinguisher/fire		fiexfire
+weapons/fireextinguisher/fire "sounds/weapons/fireextinguisher/fireext_loop.ogg"
+weapons/fireextinguisher/fireend "sounds/weapons/fireextinguisher/fireext_end.ogg"
 weapons/fireextinguisher/burst		fiexbrst
 
 // dog gun

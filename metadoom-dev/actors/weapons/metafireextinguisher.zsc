@@ -87,8 +87,8 @@ class MetaFireExtinguisher : MetaDoomMeleeWeapon
 		FIEX A 1 A_SmoothLower();
 		Loop;
 	Select:
-		FIEX A 0 A_OverlayScale(PSP_WEAPON, 1, 1);
-		FIEX A 1 A_SmoothRaise();
+		FIEX B 0 A_OverlayScale(PSP_WEAPON, 1, 1);
+		FIEX B 1 A_SmoothRaise();
 		loop;
 	Fire:
 	WindUp:
@@ -140,7 +140,7 @@ class MetaFireExtinguisher : MetaDoomMeleeWeapon
 		FIEX C 1;
 		FIEX C 1;
 		FIEX C 1;
-		FIEX C 1 A_CustomPunch(7 * random(1, 5), TRUE, CPF_NOTURN,"MetaAxePuff",80,0,0,"BasicArmorBonus","weapons/axe/hit");
+		FIEX C 1 A_CustomPunch(7 * random(1, 5), TRUE, CPF_NOTURN,"BulletPuff",80,0,0,"BasicArmorBonus","weapons/axe/hit");
 		FIEX C 1;
 		FIEX C 1;
 		FIEX C 1;
@@ -171,9 +171,15 @@ class MetaFireExtinguisher : MetaDoomMeleeWeapon
 		TNT1 A 1 A_WeaponOffset(216.23, 54.94, WOF_INTERPOLATE);
 		Stop;
 	QuickMelee:
+		FIEX A 1 A_WeaponOffset(0, 52, WOF_INTERPOLATE);
+		FIEX A 1 A_WeaponOffset(0, 38, WOF_INTERPOLATE);
+		FIEX A 0 A_WeaponOffset(0, 32, WOF_INTERPOLATE);
+		Goto MeleeLoop;
+	AltFire:
+	MeleeLoop:
 		FIEX A 0 
 		{
-			A_PlaySound("weapons/fireextinguisher/fire", CHAN_WEAPON, 1.0, 1);
+			A_StartSound("weapons/fireextinguisher/fire", CHAN_WEAPON, CHANF_LOOPING, 1.0, startTime: frandom(0.0,0.5));
 			
 			if (CountInv("PowerMetaDamage") > 0)
 			{
@@ -184,26 +190,24 @@ class MetaFireExtinguisher : MetaDoomMeleeWeapon
 		{
 			A_WeaponOffset(random(-2,2),random(32,34),WOF_INTERPOLATE);
 			A_FireProjectile("MetaFireExtinguisherSpray", random(-4,4), 0, 0, 0, FPF_NOAUTOAIM, random(-4,4));
+			A_SoundPitch(CHAN_WEAPON, (1.05) - (invoker.GetChargePercent()/100.)*0.05);
 			A_UseUpCharge();
 		}
-		FIEX A 0 A_JumpIfQuickMeleeRefire("QuickMelee", "Deselect");
-		FIEX A 10 A_StopSound(CHAN_WEAPON);
+		FIEX A 0 A_JumpIfQuickMeleeRefire("MeleeLoop", "StopMelee");
+		FIEX A 0 A_Refire();
+		FIEX A 4
+		{
+			A_StopSound(CHAN_WEAPON);
+			A_StartSound("weapons/fireextinguisher/fireend", 13, 1.0, pitch: (1.05) - (invoker.GetChargePercent()/100.)*0.05);
+		}
 		Goto Ready;
-	AltFire:
-		FIEX A 4 A_JumpIfInventory("FireExtinguished",1,"NoAmmo");
-		FIEX A 0 A_JumpIf(CountInv("HalonCannister") < 10, "NoAmmo");
-		FIEX A 1;
-		FIEX A 1 { A_WeaponOffset(0,33,WOF_INTERPOLATE); A_PlaySound("weapons/swap"); }
-		FIEX A 1 A_WeaponOffset(0,39,WOF_INTERPOLATE);
-		FIEX A 1 A_WeaponOffset(0,49,WOF_INTERPOLATE);
-		FIEX A 1 A_WeaponOffset(0,60,WOF_INTERPOLATE);
-		FIEX A 1 A_WeaponOffset(0,80,WOF_INTERPOLATE);
-		TNT1 A 4 A_WeaponOffset(0,90,WOF_INTERPOLATE);
-		TNT1 A 0 A_TakeInventory("HalonCannister", 10);
-		TNT1 A 0 A_PlaySound("weapons/fireextinguisher/burst", CHAN_WEAPON);
-		TNT1 A 0 ACS_NamedExecuteAlways("FireSelfSpray_Control",0);
-		TNT1 A 20;
-		goto Select;
+	StopMelee:
+		FIEX A 4
+		{
+			A_StopSound(CHAN_WEAPON);
+			A_StartSound("weapons/fireextinguisher/fireend", 13, 1.0, pitch: (1.05) - (invoker.GetChargePercent()/100.)*0.05);
+		}
+		Goto Deselect;
 	NoAmmo:
 		FIEX A 10 { A_Overlay(14, "Overlay.GenericButtonPress"); A_PlaySound("weapons/waterpistol/empty", CHAN_WEAPON); }
 		goto Ready;
