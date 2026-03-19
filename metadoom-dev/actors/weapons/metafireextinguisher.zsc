@@ -172,7 +172,6 @@ class MetaFireExtinguisher : MetaDoomMeleeWeapon
 		Stop;
 	QuickMelee:
 		FIEX A 1 A_WeaponOffset(0, 52, WOF_INTERPOLATE);
-		FIEX A 1 A_WeaponOffset(0, 38, WOF_INTERPOLATE);
 		FIEX A 0 A_WeaponOffset(0, 32, WOF_INTERPOLATE);
 		Goto MeleeLoop;
 	AltFire:
@@ -195,14 +194,14 @@ class MetaFireExtinguisher : MetaDoomMeleeWeapon
 		}
 		FIEX A 0 A_JumpIfQuickMeleeRefire("MeleeLoop", "StopMelee");
 		FIEX A 0 A_Refire();
-		FIEX A 4
+		FIEX A 2
 		{
 			A_StopSound(CHAN_WEAPON);
 			A_StartSound("weapons/fireextinguisher/fireend", 13, 1.0, pitch: (1.05) - (invoker.GetChargePercent()/100.)*0.05);
 		}
 		Goto Ready;
 	StopMelee:
-		FIEX A 4
+		FIEX A 2
 		{
 			A_StopSound(CHAN_WEAPON);
 			A_StartSound("weapons/fireextinguisher/fireend", 13, 1.0, pitch: (1.05) - (invoker.GetChargePercent()/100.)*0.05);
