@@ -94,11 +94,19 @@ class BerserkSpawner : Actor replaces Berserk
 	}
 }
 
-class MetaBerserk : CustomInventory //replaces Berserk
+/*
+	BERSERK
+	
+	Now acts similarly to the Dark Ages berserk, with a the classic berserk in there too.
+	Infinite melee charge for a limited time, and a melee damage bonus for the rest of the map.
+*/
+
+Class MetaBerserk : Inventory
 {
 	Default
 	{
 		+COUNTITEM
+		+INVENTORY.AUTOACTIVATE
 		+INVENTORY.ALWAYSPICKUP
 		Inventory.PickupMessage "$GOTBERSERK";
 		Inventory.PickupSound "powerups/berserk";
@@ -110,104 +118,44 @@ class MetaBerserk : CustomInventory //replaces Berserk
 		//$Color 9
 	}
 	
-	States
+	/*States
 	{
-	Spawn:
-		PSTR A -1;
-		Stop;
-	Pickup:
-		TNT1 A 0 A_JumpIf(meta_retroberserk == 1, "ClassicPickup");
-		TNT1 A 0 A_TakeInventory("PowerMetaBerserkTimer", 999);
-		TNT1 A 0 A_GiveInventory("MetaBerserkTimer");
-		TNT1 A 0 A_GiveInventory("MetaBerserkFist");
-		TNT1 A 0 HealThing(100, 0);
-		TNT1 A 0 A_SelectWeapon("MetaBerserkFist");
-		Stop;
-	ClassicPickup:
-		TNT1 A 0 A_GiveInventory("PowerStrength");
-		TNT1 A 0 A_GiveInventory("MetaBerserkFist");
-		TNT1 A 0 HealThing(100, 0);
-		TNT1 A 0 A_SelectWeapon("MetaBerserkFist");
-		Stop;
+		Spawn:
+			PSTR A -1;
+			Stop;
+		Pickup:
+			TNT1 A 0 A_JumpIf(meta_retroberserk == 1, "ClassicPickup");
+			TNT1 A 0 A_GiveInventory("MetaBerserkPower");
+			//TNT1 A 0 A_GiveInventory("MetaBerserkFist");
+			TNT1 A 0 HealThing(100, 0);
+			//TNT1 A 0 A_SelectWeapon("MetaBerserkFist");
+			Stop;
+	}*/
+	
+	override bool Use (bool pickup)
+	{
+		owner.GiveBody(100, 100);
+		owner.GiveInventory("MetaBerserkPower_Strength", 1);
+		owner.GiveInventory("MetaBerserkPower_UnlimitedCharge", 1);
+		return true;
 	}
 }
 
-// PowerStrength timers are fucked in ways I can't recall (I think they went in
-// reverse?) so I used an unused, otherwise effectless powerup type as a patsy.
-// Look, this was before ZScript and defining your own power types, okay?!?
-class MetaBerserkTimer : PowerupGiver
+Class MetaBerserkPower_Strength : Powerup
 {
-	Default
+	override void Tick ()
 	{
-		+INVENTORY.AUTOACTIVATE
-		powerup.type "PowerMetaBerserkTimer";
-		Powerup.Duration -60;
-		Powerup.Color "FF 00 00", 0.3;
-		TeleFogSourceType "MetaItemFog";
-		TeleFogDestType "MetaItemFog";
-	}
-	
-	States
-	{
-	Spawn:
-		SUIT A -1 Bright;
-		Stop;
-	}
-}
-
-class PowerMetaBerserkTimer : Powerup
-{
-	int runoutwarnings;
-	int runouttimer;
-	
-	Default
-	{
-		Powerup.Duration -40;
-		+INVENTORY.NOTELEPORTFREEZE
-	}
-	
-	override void InitEffect ()
-	{
-		
-		Super.InitEffect();
-		let player = Owner.player;
-	}
-
-	override void EndEffect ()
-	{
-		Super.EndEffect();
-		if (Owner == null) return;
-		let player = Owner.player;
-	}	
-	
-	override void Tick()
-	{
+		EffectTics += 2;
 		Super.Tick();
-		
-		if (runoutwarnings > 0)
-		{
-			runouttimer++;
-		}
-		
-		if (isBlinking() && runoutwarnings == 0)
-		{
-			owner.A_StartSound("powerups/runninglow/berserk", 999, CHANF_LOCAL|CHANF_UI, 1.0, ATTN_NONE, 1.0);
-			owner.A_Log ("$RUNOUT_BERSERK", 1);
-			runoutwarnings++;
-			runouttimer = 0;
-		} else if (runouttimer >= 35 && runoutwarnings == 1) {
-			owner.A_StartSound("powerups/runninglow/berserk", 999, CHANF_LOCAL|CHANF_UI, 1.0, ATTN_NONE, 1.0);
-			runoutwarnings++;
-			runouttimer = 0;
-		} else if (runouttimer >= 35 && runoutwarnings == 2) {
-			owner.A_StartSound("powerups/runninglow/berserk", 999, CHANF_LOCAL|CHANF_UI, 1.0, ATTN_NONE, 1.0);
-			runoutwarnings++;
-			runouttimer = 0;
-		} else if (runouttimer >= 35 && runoutwarnings == 3) {
-			owner.A_StartSound("powerups/runninglow/berserk", 999, CHANF_LOCAL|CHANF_UI, 0.5, ATTN_NONE, 1.0);
-			runoutwarnings++;
-			runouttimer = 0;
-		}
+	}
+}
+
+Class MetaBerserkPower_UnlimitedCharge : Powerup
+{
+	Default
+	{
+		Powerup.Duration -30;
+		+INVENTORY.NOTELEPORTFREEZE
 	}
 }
 
