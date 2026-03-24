@@ -49,6 +49,17 @@ class MetaAxe : MetaDoomMeleeWeapon
 	Vector2 windup_start;
 	int windup;
 	
+	action void A_MetaAxe2()
+	{
+		if ( A_MetaMelee(20 + random(-2, 2), damageType: 'Axe') )
+		{
+			A_StartSound("weapons/axe/hit", CHAN_WEAPON);
+			A_MetaHitStop(3);
+		}
+		//A_MetaMelee_Thrust(6,0,5);
+		A_MetaMelee_Pinata("MetaHealthPinata", 3, 5, 5);
+	}
+	
 	States
 	{
 		Ready:
@@ -111,16 +122,16 @@ class MetaAxe : MetaDoomMeleeWeapon
 				recoil.roll_shake = 0.3;
 				A_MetaRecoil(recoil);
 				A_PlaySound("weapons/axe/fire");
-				A_Overlay(135, "Overlay.QuickMeleeOffset");
+				A_Overlay(PSP_PUNCHANIM, "Overlay.QuickMeleeOffset");
 				
 				if (CountInv("PowerMetaDamage") > 0)
 				{
 					A_PlaySound("powerups/quad/use", CHAN_5);
 				}
 			}
-			AXEG CCC 1;
-			AXEG D 1 A_CustomPunch(7 * random(1, 5), TRUE, CPF_NOTURN,"MetaAxePuff",80,0,0,"BasicArmorBonus","weapons/axe/hit");
-			AXEG DD 1;
+			AXEG CCCD 1;
+			AXEG D 1 A_MetaAxe2();//A_CustomPunch(7 * random(1, 5), TRUE, CPF_NOTURN,"MetaAxePuff",80,0,0,"BasicArmorBonus","weapons/axe/hit");
+			AXEG D 1;
 			AXEG E 10;
 			"----" A 0 A_JumpIfQuickMelee("Deselect");
 			AXEG A 1 A_WeaponOffset(0,90,WOF_INTERPOLATE);
@@ -132,17 +143,26 @@ class MetaAxe : MetaDoomMeleeWeapon
 			AXEG A 1 A_WeaponOffset(0,32,WOF_INTERPOLATE);
 			Goto Ready;
 		Overlay.QuickMeleeOffset:
-			TNT1 A 1 A_WeaponOffset(333.58, -6.89, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(320.08, -5.09, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(299.21, 0.20, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(267.30, 9.90, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(217.59, 25.34, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(139.04, 48.56, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(34.74, 82.72, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(-52.45, 131.82, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(-109.31, 193.05, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(-146.39, 238.44, WOF_INTERPOLATE);
-			TNT1 A 1 A_WeaponOffset(-171.27, 250.93, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(257.84, -5.76, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(205.38, -2.84, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(121.87, 7.47, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(57.27, 28.61, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(17.40, 62.34, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-9.71, 102.03, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-29.53, 137.63, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-44.63, 165.95, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-56.42, 187.96, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-65.73, 205.09, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-73.13, 218.51, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-78.98, 229.03, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-83.55, 239.49, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-87.07, 255.26, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-89.66, 275.80, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-91.47, 282.68, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-92.59, 286.77, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-93.10, 289.90, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-93.07, 292.56, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-92.54, 294.93, WOF_INTERPOLATE);
 			Stop;
 		Spawn:
 			AXEG Z -1;

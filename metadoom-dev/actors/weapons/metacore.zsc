@@ -24,6 +24,26 @@ Class Meta_RecoilInfo
 	double yaw_speed;
 }
 
+Class MetaMeleeTracer : LineTracer
+{
+    Actor toFind;
+	bool foundFella;
+
+    // This is where we'll examine the results to check for ghosts
+    override ETraceStatus TraceCallback()
+    {
+        // Check if we hit an actor. If so, does it have the ghost flag?
+        if ( results.HitType == TRACE_HitActor && results.HitActor == toFind )
+        {
+			foundFella = true;
+            return TRACE_Stop;
+        }
+
+        // If we didn't hit an actor or it doesn't have the ghost flag, ignore it and keep going
+        return TRACE_Skip;
+    }
+}
+
 Class MetaDoomWeapon : Weapon
 {
 	Default
@@ -33,6 +53,8 @@ Class MetaDoomWeapon : Weapon
 		//+INVENTORY.ALWAYSPICKUP
 		+DONTGIB
 	}
+	
+	const PSP_PUNCHANIM = 135;
 	
 	static double GetShake()
 	{
@@ -271,6 +293,104 @@ Class MetaDoomWeapon : Weapon
 		}
 		return FindState('Select');
 	}
+	
+	enum EMetaMeleeFlags
+	{
+		MMF_ONLYHITONE = 1,
+		MMF_PULLIN = 2,
+	};
+	
+	Array<Actor> hitFellas;
+	
+	action void A_MetaHitStop(int time)
+	{
+		let player = invoker.owner.player;
+		let pspr = player.psprites;
+		while (pspr)
+		{
+			if ( pspr.ID == PSP_METAINV )
+			{
+				continue;
+			}
+			pspr.tics += time;
+
+			pspr = pspr.Next;
+		}
+	}
+	
+	action bool A_MetaMelee(int dmg, int range = 72, int flags = 0, Name damageType = 'Melee')
+	{
+		invoker.hitFellas.Clear();
+		
+		BlockThingsIterator it = BlockThingsIterator.Create(self, range);
+		Actor mo;
+		bool hitSomething;
+		
+		Actor src = invoker.owner;
+		
+		let tracer = new('MetaMeleeTracer');
+		
+		int newDamage = dmg;
+		if ( src.CountInv("MetaBerserkPower_Strength") )
+		{
+			newDamage *= 10;
+		}
+		
+		// Iterate thru the actors that are close enough
+		while ( it.Next() )
+		{
+			mo = it.thing; // Store actor in variable
+			if ( !mo.bShootable || mo.bDormant || mo.Health <= 0 ) continue;
+			
+			Vector3 diff = mo.pos - src.pos;
+			
+			tracer.toFind = mo;
+			tracer.Trace(src.pos + (0,0,src.height/2), src.cursector, diff.Unit(), range, TRACE_HitSky, Line.ML_BLOCKEVERYTHING, false, self);
+			let res = tracer.results;
+			
+			if ( res.HitActor == null ) continue;
+			if ( res.HitActor != mo ) continue;
+			
+			mo.DamageMobj(src, src, newDamage, damageType);
+			mo.TriggerPainChance(damageType, true);
+			hitSomething = true;
+			invoker.hitFellas.Push(mo);
+		}
+		
+		return hitSomething;
+	}
+	
+	action void A_MetaMelee_Thrust(double velX, double velY, double velZ)
+	{
+		double angle = invoker.owner.angle;
+		Vector3 velbert = (cos(angle), sin(angle), 0) * velX;
+		velbert += (cos(angle+90), sin(angle+90), 0) * velY;
+		velbert.z += velZ;
+		for ( int i = 0; i < invoker.hitFellas.Size(); i++ )
+		{
+			let fella = invoker.hitFellas[i];
+			fella.vel += velbert;
+		}
+	}
+	
+	action void A_MetaMelee_Pinata(Class<Actor> item, int count, int countDeath = -1, int countGib = -1)
+	{
+		for ( int i = 0; i < invoker.hitFellas.Size(); i++ )
+		{
+			let fella = invoker.hitFellas[i];
+			if ( !fella ) continue;
+			int dropCount = count;
+			if ( fella.health <= 0 && countDeath != -1 )
+			{
+				dropCount = countDeath;
+			}
+			if ( fella.health <= fella.GetGibHealth() && countGib != -1 )
+			{
+				dropCount = countGib;
+			}
+			MonsterCore.SpawnMetaPinata(fella, item, dropCount);
+		}
+	}
 }
 
 Class MetaDoomMeleeWeapon : MetaDoomWeapon
@@ -307,7 +427,7 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 		{
 			if ( plr.melee_button && invoker.CanUseChargeAttack() )
 			{
-				weap.UseUpCharge();
+				//weap.UseUpCharge();
 				return resolveState(doFire);
 			}
 			plr.UnMelee();
@@ -379,6 +499,9 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 	
 	void UseUpCharge(int amount = 1)
 	{
+		if ( !owner ) return;
+		if ( owner.CountInv("MetaBerserkPower_UnlimitedCharge") ) return;
+		
 		switch (chargeType)
 		{
 			case CHARGETYPE_FUEL:
@@ -401,6 +524,9 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 	
 	clearscope bool CanUseChargeAttack()
 	{
+		if ( !owner ) return false;
+		if ( owner.CountInv("MetaBerserkPower_UnlimitedCharge") ) return true;
+		
 		switch (chargeType)
 		{
 			case CHARGETYPE_FUEL:
@@ -533,7 +659,7 @@ class MetaMeleePuff : Actor
 		+NOGRAVITY
 		+ALLOWPARTICLES
 		+RANDOMIZE
-		damagetype "Fist";
+		DamageType "Fist";
 		RenderStyle "Translucent";
 		Alpha 0.5;
 		VSpeed 1;
@@ -545,12 +671,12 @@ class MetaMeleePuff : Actor
 	
 	States
 	{
-	Spawn:
-		PUFF A 4 Bright;
-		PUFF B 4;
-	Melee:
-		PUFF CD 4;
-		Stop;
+		Spawn:
+			PUFF A 4 Bright;
+			PUFF B 4;
+		Melee:
+			PUFF CD 4;
+			Stop;
 	}
 }
 

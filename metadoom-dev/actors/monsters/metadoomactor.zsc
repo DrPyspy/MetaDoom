@@ -122,7 +122,7 @@ class MonsterCore : Actor
 		stop;
 		
 	// Fire Axe
-	Pain.Axe:
+	/*Pain.Axe:
 		"####" # 0
 		{
 			A_GiveInventory("BleedingCounter", 4);
@@ -148,7 +148,7 @@ class MonsterCore : Actor
 			A_MetaPinata("MetaHealthPinata", 5);
 		}
 		"####" # 0 A_Jump(256,"XDeath");
-		stop;
+		stop;*/
 	Death.Bleeding:
 		"####" # 0
 		{

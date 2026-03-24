@@ -22,7 +22,27 @@ class MetaFist : MetaDoomMeleeWeapon
 		+WEAPON.CHEATNOTWEAPON
 		
 		MetaDoomMeleeWeapon.MaxCharges 3;
-		MetaDoomMeleeWeapon.ChargeTime 70;
+		MetaDoomMeleeWeapon.ChargeTime 105;
+	}
+	
+	action void A_MetaPunch()
+	{
+		if ( A_MetaMelee(15) )
+		{
+			A_StartSound("weapons/melee/hit", CHAN_WEAPON);
+		}
+		A_MetaMelee_Thrust(6,0,5);
+		A_MetaMelee_Pinata("MetaHealthPinata", 2, 5, 10);
+	}
+	
+	action void A_MetaKick()
+	{
+		if ( A_MetaMelee(20, 96) )
+		{
+			A_StartSound("weapons/melee/hit", CHAN_WEAPON, pitch:0.75);
+		}
+		A_MetaMelee_Thrust(12,0,10);
+		A_MetaMelee_Pinata("MetaHealthPinata", 2, 5, 10);
 	}
 	
 	States
@@ -65,6 +85,50 @@ class MetaFist : MetaDoomMeleeWeapon
 			TNT1 A 1 A_WeaponOffset(180.51, 122.21, WOF_INTERPOLATE);
 			TNT1 A 1 A_WeaponOffset(194.00, 230.83, WOF_INTERPOLATE);
 			Stop;
+		Overlay.QuickMeleeOffset2:
+			TNT1 A 1 A_WeaponOffset(233.09, 142.00, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(184.85, 55.41, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(90.29, 41.87, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-1.10, 35.61, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-11.09, 32.78, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-10.26, 32.00, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-15.96, 32.52, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-24.59, 34.21, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-27.91, 37.27, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-35.92, 42.01, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-55.56, 48.86, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-78.93, 58.46, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-108.98, 71.91, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-149.79, 91.33, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-180.51, 122.21, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-194.00, 230.83, WOF_INTERPOLATE);
+			Stop;
+		Overlay.QuickMeleeOffset3:
+			TNT1 A 1 A_WeaponOffset(0.00, 204.00, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(41.01, 105.84, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(59.79, 69.35, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(63.88, 59.50, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(60.80, 58.05, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(58.10, 58.00, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(23.56, 50.26, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(16.81, 44.22, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(12.98, 40.88, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(5.58, 39.16, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(6.98, 36.96, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(8.09, 33.04, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(2.51, 31.05, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(1.39, 31.24, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(0.00, 32.00, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-1.40, 37.21, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-2.99, 51.18, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-4.83, 71.41, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-7.03, 95.39, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-9.77, 120.61, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-13.47, 144.59, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-18.97, 164.82, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-23.25, 178.79, WOF_INTERPOLATE);
+			TNT1 A 1 A_WeaponOffset(-24.00, 184.00, WOF_INTERPOLATE);
+			Stop;
 		AltFire:
 		QuickMelee:
 			PUNG G 1 
@@ -90,11 +154,80 @@ class MetaFist : MetaDoomMeleeWeapon
 				A_Overlay(13, "Overlay.QuickMeleeOffset");
 			}
 			PUNG GG 1; //PNCH BCDE 1 
-			PUNG G 1 A_CustomPunch(15, TRUE, CPF_NOTURN,"MetaMeleePuff",80,0,0,"BasicArmorBonus","weapons/melee/hit");
+			PUNG G 1 A_MetaPunch();
 			PUNG GGGGGGGGGGGGG 1;
+			TNT1 A 1 A_JumpIfQuickMeleeRefire("QuickMelee2", null);
 			"----" A 0
 			{
 				//A_WeaponOffset(0, 64);
+				return A_JumpIfQuickMelee("Deselect");
+			}
+			PUNG G 0 A_PlaySound("weapons/swap");
+			Goto Ready;
+		QuickMelee2:
+			PUNG G 1 
+			{
+				A_UseUpCharge();
+				
+				A_PlaySound("weapons/melee/wiff");
+				
+				if (CountInv("PowerMetaDamage") > 0)
+				{
+					A_PlaySound("powerups/quad/use", CHAN_5);
+				}
+			
+				let recoil = new("Meta_RecoilInfo");
+				recoil.tics_in = 2;
+				recoil.tics_out = 6;
+				recoil.yaw = 0.5;
+				recoil.roll = 0.15;
+				recoil.roll_speed = random(25,30);
+				recoil.roll_shake = 0.05;
+				A_MetaRecoil(recoil);
+				
+				A_Overlay(13, "Overlay.QuickMeleeOffset2");
+			}
+			PUNG HH 1; //PNCH BCDE 1 
+			PUNG H 1 A_MetaPunch();
+			PUNG HHHHHHHHHHHHH 1;
+			TNT1 A 1 A_JumpIfQuickMeleeRefire("QuickMelee3", null);
+			"----" A 0
+			{
+				//A_WeaponOffset(0, 64);
+				return A_JumpIfQuickMelee("Deselect");
+			}
+			PUNG G 0 A_PlaySound("weapons/swap");
+			Goto Ready;
+		QuickMelee3:
+			PUNG I 6
+			{
+				A_UseUpCharge();
+				A_Overlay(13, "Overlay.QuickMeleeOffset3");
+			}
+			PUNG J 2
+			{
+				
+				A_PlaySound("weapons/melee/wiff");
+				
+				if (CountInv("PowerMetaDamage") > 0)
+				{
+					A_PlaySound("powerups/quad/use", CHAN_5);
+				}
+			
+				let recoil = new("Meta_RecoilInfo");
+				recoil.tics_in = 2;
+				recoil.tics_out = 12;
+				recoil.yaw = 1;
+				recoil.roll = -0.15;
+				recoil.pitch = 0.5;
+				recoil.roll_speed = random(25,30);
+				recoil.roll_shake = 0.5;
+				A_MetaRecoil(recoil);
+			}
+			"----" A 0 A_MetaKick();
+			PUNG K 15;
+			"----" A 0
+			{
 				return A_JumpIfQuickMelee("Deselect");
 			}
 			PUNG G 0 A_PlaySound("weapons/swap");
