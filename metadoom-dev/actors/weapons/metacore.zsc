@@ -318,7 +318,7 @@ Class MetaDoomWeapon : Weapon
 		}
 	}
 	
-	action bool A_MetaMelee(int dmg, int range = 72, int flags = 0, Name damageType = 'Melee')
+	action bool A_MetaMelee(int dmg, int range = 72, int maxAngle = -1, int flags = 0, Name damageType = 'Melee')
 	{
 		invoker.hitFellas.Clear();
 		
@@ -341,6 +341,7 @@ Class MetaDoomWeapon : Weapon
 		{
 			mo = it.thing; // Store actor in variable
 			if ( !mo.bShootable || mo.bDormant || mo.Health <= 0 ) continue;
+			if ( maxAngle != -1 && AbsAngle(src.angle, src.AngleTo(mo)) > maxAngle ) continue;
 			
 			Vector3 diff = mo.pos - src.pos;
 			
@@ -400,6 +401,8 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 	int chargeTime;
 	int maxCharges;
 	int chargeType;
+	int chargeDelayer;
+	int chargeDelay;
 	
 	int fuelAmount;
 	int maxFuel;
@@ -415,6 +418,7 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 	property MaxCharges : maxCharges;
 	property ChargeTime : chargeTime;
 	property ChargeType : chargeType;
+	property ChargeDelay : chargeDelay;
 	property FuelDelay : fuelDelay;
 	property MaxFuel : maxfuel;
 	
@@ -453,6 +457,7 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 	{
 		MetaDoomMeleeWeapon.MaxCharges 1;
 		MetaDoomMeleeWeapon.ChargeTime 245;
+		MetaDoomMeleeWeapon.ChargeDelay 0;
 		MetaDoomMeleeWeapon.ChargeType CHARGETYPE_DEFAULT;
 		MetaDoomMeleeWeapon.FuelDelay 70;
 		MetaDoomMeleeWeapon.MaxFuel 35;
@@ -470,11 +475,18 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 		super.Tick();
 		if ( charges < maxCharges )
 		{
-			chargeAmount += 1;
-			if ( chargeAmount >= chargeTime )
+			if ( chargeDelayer > 0 )
 			{
-				chargeAmount = 0;
-				charges += 1;
+				chargeDelayer -= 1;
+			}
+			if ( chargeDelayer <= 0 )
+			{
+				chargeAmount += 1;
+				if ( chargeAmount >= chargeTime )
+				{
+					chargeAmount = 0;
+					charges += 1;
+				}
 			}
 		}
 		if ( fuelDelayer > 0 )
@@ -513,6 +525,7 @@ Class MetaDoomMeleeWeapon : MetaDoomWeapon
 				break;
 			default:
 				charges = max(0, charges-amount);
+				chargeDelayer = 35;
 				break;
 		}
 	}
