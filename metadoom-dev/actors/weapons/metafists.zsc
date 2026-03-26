@@ -22,12 +22,13 @@ class MetaFist : MetaDoomMeleeWeapon
 		+WEAPON.CHEATNOTWEAPON
 		
 		MetaDoomMeleeWeapon.MaxCharges 3;
-		MetaDoomMeleeWeapon.ChargeTime 105;
+		MetaDoomMeleeWeapon.ChargeTime 55;
+		MetaDoomMeleeWeapon.ChargeDelay 35;
 	}
 	
 	action void A_MetaPunch()
 	{
-		if ( A_MetaMelee(15) )
+		if ( A_MetaMelee(15, maxAngle: 50) )
 		{
 			A_StartSound("weapons/melee/hit", CHAN_WEAPON);
 		}
@@ -37,7 +38,7 @@ class MetaFist : MetaDoomMeleeWeapon
 	
 	action void A_MetaKick()
 	{
-		if ( A_MetaMelee(20, 96) )
+		if ( A_MetaMelee(20, 96, maxAngle: 50) )
 		{
 			A_StartSound("weapons/melee/hit", CHAN_WEAPON, pitch:0.75);
 		}
